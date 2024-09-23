@@ -1,7 +1,8 @@
 "use client"; // This is a client component
 import * as React from 'react';
 import dynamic from 'next/dynamic';
-
+import { LineChart } from '@mui/x-charts/LineChart';
+import { BarChart } from '@mui/x-charts/BarChart';
 import { Grid2, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography,Box } from '@mui/material';
 import { Accordion, AccordionDetails, AccordionSummary} from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -16,6 +17,12 @@ const stockData = [
   { symbol: 'TSLA', name: 'Tesla Inc.', price: 790.54 },
 ];
 
+const quarteryData = [
+  { data: [35, 44, 24, 34] },
+  { data: [51, 6, 49, 30] },
+  { data: [15, 25, 30, 50] },
+  { data: [60, 50, 15, 25] },
+];
 // Define types for stock and account data
 interface Stock {
   symbol: string;
@@ -27,6 +34,17 @@ interface Stock {
 interface Account {
   accountName: string;
   stocks: Stock[];
+}
+
+export function ChartsOverviewDemo({ dataSeries }) {
+  return (
+    <BarChart
+      series= {dataSeries}
+      height={290}
+      xAxis={[{ data: ['Q1', 'Q2', 'Q3', 'Q4'], scaleType: 'band' }]}
+      margin={{ top: 10, bottom: 30, left: 40, right: 10 }}
+    />
+  );
 }
 
 /// Sample accounts and stock data
@@ -80,6 +98,18 @@ const StockTable: React.FC<{ stocks: Stock[] }> = ({ stocks }) => {
       <Typography variant="h6" align="right" sx={{ padding: 2 }}>
         Account Total: ${total.toFixed(2)}
       </Typography>
+      <ChartsOverviewDemo dataSeries={quarteryData}></ChartsOverviewDemo>
+      <LineChart
+      xAxis={[{ data: [1, 2, 3, 5, 8, 10] }]}
+      series={[
+        {
+          data: [2, 5.5, 2, 8.5, 1.5, 5],
+          area: true,
+        },
+      ]}
+      width={500}
+      height={300}
+    />
     </>
   );
 };

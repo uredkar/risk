@@ -13,6 +13,7 @@
     "@mui/icons-material": "^6",
     "@mui/material": "^6",
     "@mui/material-nextjs": "^6",
+    "@mui/x-charts": "^7.18.0",
     "@toolpad/core": "0.7.0",
     "axios": "^1.7.7",
     "next": "^14",
