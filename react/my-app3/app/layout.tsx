@@ -33,6 +33,11 @@ const NAVIGATION: Navigation = [
     title: 'Risk',
     icon: <ViewListIcon />,
   },
+  {
+    segment: 'playground',
+    title: 'Playground',
+    icon: <ViewListIcon />,
+  },
 ];
 
 const BRANDING = {

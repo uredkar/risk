@@ -1,9 +1,9 @@
 {
   "pages": {
-    "/(dashboard)/portfolio/page": [
+    "/(dashboard)/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(dashboard)/portfolio/page.js"
+      "static/chunks/app/(dashboard)/page.js"
     ],
     "/(dashboard)/layout": [
       "static/chunks/webpack.js",
@@ -15,15 +15,25 @@
       "static/chunks/main-app.js",
       "static/chunks/app/layout.js"
     ],
-    "/(dashboard)/accounts/page": [
+    "/(dashboard)/playground/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(dashboard)/accounts/page.js"
+      "static/chunks/app/(dashboard)/playground/page.js"
     ],
     "/(dashboard)/risk/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(dashboard)/risk/page.js"
+    ],
+    "/(dashboard)/accounts/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(dashboard)/accounts/page.js"
+    ],
+    "/(dashboard)/portfolio/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(dashboard)/portfolio/page.js"
     ]
   }
 }
