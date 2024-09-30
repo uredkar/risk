@@ -1,11 +1,13 @@
 import * as React from 'react';
+import { AppProps } from 'next/app';
 import { AppProvider } from '@toolpad/core/nextjs';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import ListIcon from '@mui/icons-material/List';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import type { Navigation } from '@toolpad/core';
-
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 import theme from '../theme';
 
 const NAVIGATION: Navigation = [
@@ -43,6 +45,11 @@ const NAVIGATION: Navigation = [
     title: 'Playground2',
     icon: <ViewListIcon />,
   },
+  {
+    segment: 'playground3',
+    title: 'Playground3',
+    icon: <ViewListIcon />,
+  },
 ];
 
 const BRANDING = {
@@ -57,18 +64,21 @@ export default function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="en" data-toolpad-color-scheme="light" suppressHydrationWarning>
       <body>
-        
           <AppRouterCacheProvider options={{ enableCssLayer: true }}>
+          
             <AppProvider
               navigation={NAVIGATION}
               branding={BRANDING}
               
               theme={theme}
             >
+             
               {props.children}
+              
             </AppProvider>
-          </AppRouterCacheProvider>
         
+          </AppRouterCacheProvider>
+
       </body>
     </html>
   );
