@@ -34,8 +34,13 @@ const NAVIGATION: Navigation = [
     icon: <ViewListIcon />,
   },
   {
-    segment: 'playground',
-    title: 'Playground',
+    segment: 'playground1',
+    title: 'Playground1',
+    icon: <ViewListIcon />,
+  },
+  {
+    segment: 'playground2',
+    title: 'Playground2',
     icon: <ViewListIcon />,
   },
 ];
