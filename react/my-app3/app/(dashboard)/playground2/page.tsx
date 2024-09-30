@@ -13,7 +13,7 @@ import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import { store } from './store';
 import MyComponent from './mycomponent';
-
+import ChartComponent from './chartcomponent';
 
 
 export default function Playground2Page() {
@@ -21,6 +21,7 @@ export default function Playground2Page() {
     return(
       <Provider store={store}>
         <MyComponent />
+        <ChartComponent></ChartComponent>
       </Provider>
     )
   };
