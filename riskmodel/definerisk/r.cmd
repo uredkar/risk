@@ -1,0 +1,1 @@
+java -cp target\scala-3.5.2\definerisk.jar strategyApp
