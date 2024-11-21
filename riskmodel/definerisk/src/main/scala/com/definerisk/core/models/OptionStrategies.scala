@@ -1,23 +1,16 @@
 package com.definerisk.core.OptionStrategies
 
 import java.time.LocalDate
+import com.definerisk.core.models.*
 
-// Underlying asset (e.g., a stock or index)
-case class Underlying(symbol: String, price: BigDecimal, date: LocalDate)
-given Underlying = Underlying("AAPL", 150.00, LocalDate.now)
-// Option type: Call or Put
-enum OptionType:
-  case Call, Put
+// A single leg of a strategy (long/short option contract)
+case class StrategyLeg(contract: OptionContract, isLong: Boolean)
 
-// Option contract
-case class OptionContract(
-  symbol: String,
-  underlying: Underlying,
-  price: BigDecimal,
-  expiryDate: LocalDate,
-  strikePrice: BigDecimal,
-  optionType: OptionType
-)
+// A complete options strategy
+case class OptionsStrategy(name: String, outlook: String, maxRisk: Double,legs: Seq[StrategyLeg])
+//case class Underlying(symbol: String, price: Double, date: String)
+case class OptionTrade(action: String, `type`: String, expiry: String, strike: Double, premium: Double)
+case class Strategy(name: String, outlook: String, maxRisk: Double, trades: List[OptionTrade])
 
 def coveredCall(
   strikePrice: BigDecimal,
@@ -26,6 +19,8 @@ def coveredCall(
     )(using underlying: Underlying): OptionsStrategy =
   OptionsStrategy(
     name = "Covered Call",
+    outlook = "Bulish",
+    maxRisk = 10,
     legs = Seq(
       StrategyLeg(OptionContract(underlying.symbol, underlying, premium, expiryDate, strikePrice, OptionType.Call), isLong = false)
     )
@@ -35,13 +30,16 @@ def straddle(
   strikePrice: BigDecimal,
   callPremium: BigDecimal,
   putPremium: BigDecimal,
-  expiryDate: LocalDate
+  expiryDate: LocalDate,
+  isLong: Boolean
     )(using underlying: Underlying): OptionsStrategy =
   OptionsStrategy(
     name = "Straddle",
+    outlook = "Bulish",
+    maxRisk = 10,
     legs = Seq(
-      StrategyLeg(OptionContract(underlying.symbol, underlying, callPremium, expiryDate, strikePrice, OptionType.Call), isLong = true),
-      StrategyLeg(OptionContract(underlying.symbol, underlying, putPremium, expiryDate, strikePrice, OptionType.Put), isLong = true)
+      StrategyLeg(OptionContract(underlying.symbol, underlying, callPremium, expiryDate, strikePrice, OptionType.Call), isLong = isLong),
+      StrategyLeg(OptionContract(underlying.symbol, underlying, putPremium, expiryDate, strikePrice, OptionType.Put), isLong = isLong)
     )
   )
 
@@ -54,17 +52,14 @@ def bullCallSpread(
 )(using underlying: Underlying): OptionsStrategy =
   OptionsStrategy(
     name = "Bull Call Spread",
+    outlook = "Bulish",
+    maxRisk = 10,
     legs = Seq(
       StrategyLeg(OptionContract(underlying.symbol, underlying, buyPremium, expiryDate, lowerStrike, OptionType.Call), isLong = true),
       StrategyLeg(OptionContract(underlying.symbol, underlying, sellPremium, expiryDate, higherStrike, OptionType.Call), isLong = false)
     )
   )
 
-// A single leg of a strategy (long/short option contract)
-case class StrategyLeg(contract: OptionContract, isLong: Boolean)
-
-// A complete options strategy
-case class OptionsStrategy(name: String, legs: Seq[StrategyLeg])
 
 trait IncomeStrategy:
   def maxIncome: BigDecimal
@@ -84,5 +79,3 @@ case class CoveredCallWithAnalysis(
   def maxIncome: BigDecimal = income
   def maxRisk: BigDecimal = risk
 
-// Example usage
-val coveredCallAnalysis = CoveredCallWithAnalysis(coveredCall(155.00, 3.00, LocalDate.now.plusMonths(1)), 3.00, 0.0)

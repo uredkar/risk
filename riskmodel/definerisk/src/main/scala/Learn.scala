@@ -3,7 +3,6 @@ import scala.compiletime.summonFrom
 import scala.reflect.ClassTag
 import com.definerisk.core.OptionStrategies.*
 import java.time.LocalDate
-
 trait Greeting:
   def sayHello(): String
 
