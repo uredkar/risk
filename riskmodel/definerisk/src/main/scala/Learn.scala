@@ -3,6 +3,78 @@ import scala.compiletime.summonFrom
 import scala.reflect.ClassTag
 import com.definerisk.core.OptionStrategies.*
 import java.time.LocalDate
+
+@main def samTypes = 
+  trait Increaser:
+    def increase(i: Int ): Int
+
+  def increaseOne(increase: Increaser):Int = 
+    increase.increase(1)
+
+  def increaseTwo(increase: Increaser):Int = 
+    increase.increase(2)
+
+  println(s"increase one by 7 ${increaseOne(i => i + 7)}")
+  println(s"increase two by 7 ${increaseTwo(i => i + 7)}")
+
+def makeRowSeq(row: Int) =
+    for col <- 1 to 10 yield
+      val prod = (row * col).toString
+      val padding = " " * (4 - prod.length)
+      padding + prod
+
+  // Returns a row as a string
+def makeRow(row: Int) = makeRowSeq(row).mkString
+
+  // Returns table as a string with one row per line
+def multiTable() =
+  val tableSeq = // a sequence of row strings
+    for row <- 1 to 10
+    yield makeRow(row)
+
+  tableSeq.mkString("\n")
+
+@main def printMultiplicationTable():Unit = 
+    println(multiTable())
+
+class Rational(n: Int, d: Int):
+  require(d != 0)
+  println(s"Created $n $d")
+  val denom = d
+  val numer = n
+
+  override def  toString = s"$n/$d"
+  def this(n: Int) = this(n,1)
+
+  def + (that: Rational): Rational =
+    println(s"add $that")
+    Rational(numer * that.denom + that.numer * denom,
+            denom * that.denom)
+
+  private def gcd(a: Int, b: Int): Int =
+    if b == 0 then a else gcd(b, a % b)
+
+extension (x: Int)
+  def + (y: Rational) = Rational(x) + y
+
+@main def listFiles():Unit = 
+  val filesHere = (new java.io.File("C:/sources/risk/riskmodel/definerisk/src/main/scala")).listFiles
+  for 
+    file <- filesHere
+    if file.isFile
+    if file.getName.endsWith(".scala")
+  do println(file)
+
+@main def rationalExample():Unit = 
+  val r = Rational(10,3)
+  println(s"r = $r")
+  val oneHalf = Rational(1, 2)  
+  val twoThirds = Rational(2, 3)  
+  val n1 = oneHalf + twoThirds  
+  val n2 = twoThirds + oneHalf
+  val n3 = 10 + twoThirds
+  println(s"onehalf $oneHalf $n1 $n2 $n3")
+
 trait Greeting:
   def sayHello(): String
 
@@ -89,6 +161,7 @@ def defaultValueFor[T]: T =
 def defaultValueFor[T](using ct: ClassTag[T]): T =
   if (ct.runtimeClass.isPrimitive) 0.asInstanceOf[T]
   else null.asInstanceOf[T]
+
 
 @main def summonExample(): Unit =
   val greeting = summon[Greeting] // Retrieves the given instance of Greeting

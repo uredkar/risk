@@ -1,8 +1,12 @@
 package com.definerisk.dsl
-
+import com.definerisk.core.utils.PrettyPrinter.{*, given}
 import io.circe.yaml.parser
 import io.circe.generic.auto._
 import io.circe._
+import java.nio.file.{Files, Paths}
+import scala.jdk.CollectionConverters._
+import scala.io.Source
+
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.nio.file.{Files, Paths}
@@ -60,32 +64,72 @@ given Decoder[Trade] = Decoder.instance { cursor =>
   }
 }
 
-given Decoder[StrategyContext] = Decoder.forProduct5(
+given Decoder[StrategyContext] = Decoder.forProduct6(
   "name",
+  "strategy",
   "underlying",
   "trades",
   "outlook",
   "maxRisk"
 )(StrategyContext.apply)
 
+
+
+given PrettyPrinter[StrategyContext] with
+  def prettyPrint(ctx: StrategyContext): String =
+    s"name ${ctx.name} strategy ${ctx.strategy} \n" +
+    s"underlying ${ctx.underlying} outlook ${ctx.outlook} \n" +
+    s"maxRisk ${ctx.maxRisk}\n" +
+    s"trades ${ctx.trades}\n"
+
+object YamlReader:
+  def readYamlFiles(directory: String): Map[String, String] =
+    // Find all .yaml files in the directory
+    val yamlFiles = Files.list(Paths.get(directory))
+      .iterator()
+      .asScala
+      .filter(path => path.toString.endsWith(".yaml"))
+      .toList
+
+    // Read the content of each file and create a map
+    yamlFiles.map { path =>
+      val fileName = path.getFileName.toString
+      val content = Source.fromFile(path.toFile).mkString
+      fileName -> content
+    }.toMap
+
+@main def runYamlReader(): Unit =
+  val directory = "./src/main/resources/" // Replace with your directory
+  val yamlContents = YamlReader.readYamlFiles(directory)
+  yamlContents.foreach { case (file, content) =>
+    println(s"File: $file")
+    println(s"Content:\n$content")
+    println("------")
+    val ctx = DSLProcessor.parse(content)
+    printPretty(ctx)            
+
+  }
+
 object DSLProcessor {
-  def main(args: Array[String]): Unit = {
+  def main(args: Array[String]): Unit = 
     val yamlFile = "./src/main/resources/strategy.yaml"
     val yamlContent = new String(Files.readAllBytes(Paths.get(yamlFile)))
+    parse(yamlContent)
 
+  def parse(yamlContent: String): StrategyContext =
     // Parse YAML into DSLInput
     parser.parse(yamlContent) match {
       case Right(json) =>
         val strategy = json.as[StrategyContext] 
         strategy match {
-          case Right(ctx) =>
-            println(s"Parsed DSL: $ctx")
+          case Right(ctx) => ctx
           case Left(decodingError) =>
-            println(s"Decoding Error: ${decodingError.getMessage}")
+            throw new IllegalArgumentException(s"Decoding Error: ${decodingError.getMessage}")
+            //println(s"Decoding Error: ${decodingError.getMessage}")
         }
       case Left(parsingError) =>
-        println(s"Parsing Error: ${parsingError.getMessage}")
-    }
+        throw new IllegalArgumentException(s"Parsing Error: ${parsingError.getMessage}")
+    
     /*
     val underlying = DSL.context {
         _.underlying("ABC").price(28).on("February 19, 2004")

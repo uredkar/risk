@@ -51,6 +51,7 @@ enum Trade:
 
 case class StrategyContext(
   name: String,
+  strategy: String,
   underlying: UnderlyingContext, // Underlying information for the strategy
   trades: List[Trade] = List(),
   outlook: Option[String] = None,
@@ -72,7 +73,7 @@ class UnderlyingBuilder {
 }
 
 // Builder for Strategies
-class StrategyBuilder(name: String, underlying: UnderlyingContext) {
+class StrategyBuilder(name: String,strategy: String, underlying: UnderlyingContext) {
   private var trades: List[Trade] = List()
   private var outlook: Option[String] = None
   private var maxRisk: Option[Double] = None
@@ -91,7 +92,7 @@ class StrategyBuilder(name: String, underlying: UnderlyingContext) {
     this
   }
 
-  def build(): StrategyContext = StrategyContext(name,underlying, trades, outlook, maxRisk)
+  def build(): StrategyContext = StrategyContext(name,strategy,underlying, trades, outlook, maxRisk)
 }
 
 class EquityTradeBuilder(action: PositionType, parent: StrategyBuilder) {
@@ -120,6 +121,6 @@ object DSL {
   def context(body: UnderlyingBuilder => UnderlyingContext): UnderlyingContext =
     body(new UnderlyingBuilder)
 
-  def strategy(name: String,underlying: UnderlyingContext)(body: StrategyBuilder => StrategyContext): StrategyContext =
-    body(new StrategyBuilder(name,underlying))
+  def strategy(name: String,strategy: String, underlying: UnderlyingContext)(body: StrategyBuilder => StrategyContext): StrategyContext =
+    body(new StrategyBuilder(name,strategy,underlying))
 }

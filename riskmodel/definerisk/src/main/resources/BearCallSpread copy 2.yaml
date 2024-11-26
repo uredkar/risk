@@ -1,0 +1,26 @@
+name: "Bear Call Spread"
+strategy: "Basic"
+underlying:
+  symbol: "ABC"
+  price: 28.0
+  date: "2004-02-19"
+
+outlook: "Bearish"
+maxRisk: 1000.0
+trades:
+  - type: "OptionTrade"
+    action: "Long"
+    optionType: "Call"
+    expiry: "2024-12-20"
+    strike: 100.0
+    premium: 5.0
+  - type: "OptionTrade"
+    action: "Short"
+    optionType: "Call"
+    expiry: "2024-12-20"
+    strike: 100.0
+    premium: 5.0
+  - type: "StockTrade"
+    action: "Long"
+    price: 95.0
+    quantity: 100
