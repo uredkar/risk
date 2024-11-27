@@ -16,18 +16,21 @@ trades:
   - type: "OptionTrade"
     action: "Long"
     optionType: "Call"
-    expiry: "2024-12-20"
-    strike: 100.0
-    premium: 5.0
+    expiry: "2024-06-20"
+    strike: 45.0
+    premium: 6.12
     quantity: 1
   - type: "OptionTrade"
     action: "Short"
     optionType: "Call"
     expiry: "2024-12-20"
-    strike: 100.0
-    premium: 5.0
-    quantity: 1
-  - type: "StockTrade"
+    strike: 50.0
+    premium: 3.07
+    quantity: 2
+  - type: "OptionTrade"
     action: "Long"
-    price: 95.0
-    quantity: 100
+    optionType: "Call"
+    expiry: "2024-12-20"
+    strike: 55.0
+    premium: 1.30
+    quantity: 1

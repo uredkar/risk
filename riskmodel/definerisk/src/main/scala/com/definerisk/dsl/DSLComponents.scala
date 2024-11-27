@@ -6,7 +6,7 @@ import scala.language.implicitConversions
 
 case class Underlying(symbol: String, price: BigDecimal, date: LocalDate)
 // Define Underlying Context
-case class UnderlyingContext(symbol: String, price: Double, date: LocalDate)
+//case class UnderlyingContext(symbol: String, price: Double, date: LocalDate)
 
 enum TradeType:
   case Call, Put, Stock, ETF
@@ -34,13 +34,24 @@ object EquitiesType:
 enum PositionType:
   case Long, Short
 
+enum StrategyType:
+  case CapitalGain, Income
+
+object  StrategyType {
+  def fromString(str: String): Option[StrategyType] = str.trim.toLowerCase match {
+    case "capitalgain" => Some(CapitalGain)
+    case "income" => Some(Income)
+    case _ => None
+  }
+}
 enum Trade:
   case OptionTrade(
     action: PositionType,     // long or short
     optionType: OptionType, // call or put
-    expiry: String,     // Expiration Date
-    strike: Double,     // Strike Price
-    premium: Double     // Option Premium
+    expiry: LocalDate,     // Expiration Date
+    strike: BigDecimal,     // Strike Price
+    premium: BigDecimal,     // Option Premium
+    quantity: Int
   ) extends Trade
 
   case StockTrade(
@@ -49,14 +60,27 @@ enum Trade:
     quantity: Int
   ) extends Trade
 
-case class StrategyContext(
+case class Strategy(
+    context: Context,
+    trades: List[Trade] = List()
+)  
+case class Context(
   name: String,
-  strategy: String,
-  underlying: UnderlyingContext, // Underlying information for the strategy
-  trades: List[Trade] = List(),
+  difficulty: String,
+  direction: String,
   outlook: Option[String] = None,
-  maxRisk: Option[Double] = None
+  maxReward: Option[String] = None,
+  maxRisk: Option[String] = None,
+  breakEvenDown: Option[String] = None,
+  strategyType: Option[StrategyType] = None,
+  volatility: String,
+  underlying: Option[Underlying]
 )
+/*
+class StrategyContextBuilder {
+  private var name: String = ""
+  private var underlying: UnderlyingContext = 
+}
 
 // Builder for Underlying Context
 class UnderlyingBuilder {
@@ -73,7 +97,7 @@ class UnderlyingBuilder {
 }
 
 // Builder for Strategies
-class StrategyBuilder(name: String,strategy: String, underlying: UnderlyingContext) {
+class StrategyBuilder(context: StrategyContext) {
   private var trades: List[Trade] = List()
   private var outlook: Option[String] = None
   private var maxRisk: Option[Double] = None
@@ -92,7 +116,7 @@ class StrategyBuilder(name: String,strategy: String, underlying: UnderlyingConte
     this
   }
 
-  def build(): StrategyContext = StrategyContext(name,strategy,underlying, trades, outlook, maxRisk)
+  def build(): Strategy = Strategy(context, trades)
 }
 
 class EquityTradeBuilder(action: PositionType, parent: StrategyBuilder) {
@@ -118,9 +142,11 @@ class OptionTradeBuilder(action: PositionType, optionType: OptionType, parent: S
 
 // DSL Extension Methods
 object DSL {
-  def context(body: UnderlyingBuilder => UnderlyingContext): UnderlyingContext =
-    body(new UnderlyingBuilder)
+  def context(body: StrategyContextBuilder => StrategyContext): StrategyContext =
+    body(new StrategyContext)
 
-  def strategy(name: String,strategy: String, underlying: UnderlyingContext)(body: StrategyBuilder => StrategyContext): StrategyContext =
-    body(new StrategyBuilder(name,strategy,underlying))
+  def strategy(name: String,strategy: String, underlying: UnderlyingContext)(body: StrategyBuilder => Strategy): Strategy =
+    body(new StrategyBuilder(context))
 }
+
+*/
