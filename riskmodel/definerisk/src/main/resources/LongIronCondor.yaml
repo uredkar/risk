@@ -1,37 +1,44 @@
 context:
-  name: "Long Call Butterfly"
+  name: "Long Iron Condor"
   difficulty: "Intermediate"
   direction: "Neutral"
   outlook: "direction Neutral"
   maxReward: "Difference between adjacent strikes - net debit"
   maxRisk: "Net Debit Paid"
   breakEvenDown: "Higher Strike - net debit"
-  strategyType: "CapitalGain"
+  strategyType: "Income"
   volatility: "Low"
   underlying:
-    underlyingType: "ETF"
+    underlyingType: "Stock"
     symbol: "ABC"
-    price: 50.0
-    date: "2004-05-17"
+    price: 27.50
+    date: "2004-04-17"
 trades:
   - type: "OptionTrade"
     action: "Long"
-    optionType: "Call"
-    expiry: "2024-06-20"
-    strike: 45.0
-    premium: 6.12
+    optionType: "Put"
+    expiry: "2024-05-20"
+    strike: 20.0
+    premium: 0.25
+    quantity: 1
+  - type: "OptionTrade"
+    action: "Short"
+    optionType: "Put"
+    expiry: "2024-05-20"
+    strike: 25.0
+    premium: 1.25
     quantity: 1
   - type: "OptionTrade"
     action: "Short"
     optionType: "Call"
-    expiry: "2024-12-20"
-    strike: 50.0
-    premium: 3.07
-    quantity: 2
+    expiry: "2024-05-20"
+    strike: 30.0
+    premium: 1.30
+    quantity: 1
   - type: "OptionTrade"
     action: "Long"
     optionType: "Call"
-    expiry: "2024-12-20"
-    strike: 55.0
-    premium: 1.30
+    expiry: "2024-05-20"
+    strike: 35.0
+    premium: 0.35
     quantity: 1

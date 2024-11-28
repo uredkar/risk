@@ -1,5 +1,7 @@
-package com.definerisk.dsl
-import com.definerisk.core.utils.PrettyPrinter.{*, given}
+package com.definerisk.core.dsl
+
+
+
 import io.circe.yaml.parser
 import io.circe.generic.auto._
 import io.circe._
@@ -15,16 +17,7 @@ import scala.util.matching.Regex
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.nio.file.{Files, Paths}
-import com.definerisk.dsl.*
-//import com.definerisk.core.models.*
-//import com.definerisk.core.OptionStrategies.*
-import com.definerisk.dsl.* 
-
-//import DSL._
-///case class Context(underlying: Underlying)
-///case class DSLInput(context: Context, strategy: Strategy)
-
+import com.definerisk.core.models.{*, given}
 
 import io.circe._, io.circe.generic.auto._
 
@@ -53,6 +46,32 @@ given Decoder[OptionType] = Decoder.decodeString.emap {
   case "Call" => Right(OptionType.Call)
   case "Put"  => Right(OptionType.Put)
   case other  => Left(s"Invalid OptionType: $other")
+}
+
+given Decoder[TradeType] = Decoder.decodeString.emap {
+  case "Stock" => Right(TradeType.Stock)
+  case "ETF"  => Right(TradeType.ETF)
+  case other  => Left(s"Invalid TradeType: $other")
+}
+
+given Decoder[Underlying] = Decoder.instance { cursor =>
+    cursor.downField("underlyingType").as[TradeType].flatMap {
+      case TradeType.Stock =>
+        for 
+          symbol <- cursor.downField("symbol").as[String]
+          price  <- cursor.downField("price").as[BigDecimal]
+          date   <- cursor.downField("date").as[LocalDate]
+        yield StockUnderlying(TradeType.Stock,symbol,price,date)
+      case TradeType.ETF =>
+        for 
+          symbol <- cursor.downField("symbol").as[String]
+          price  <- cursor.downField("price").as[BigDecimal]
+          date   <- cursor.downField("date").as[LocalDate]
+        yield ETFUnderlying(TradeType.ETF,symbol,price,date)
+    
+      case other =>
+        Left(DecodingFailure(s"Unknown underlyingType: $other", cursor.history))        
+    }
 }
 
 given Decoder[Trade] = Decoder.instance { cursor =>
@@ -86,14 +105,6 @@ given Decoder[Strategy] = Decoder.forProduct2(
 
 
 
-given PrettyPrinter[Strategy] with
-  def prettyPrint(strategy: Strategy): String =
-    s"name ${strategy.context.name} difficulty ${strategy.context.difficulty} \n" +
-    s"underlying ${strategy.context.underlying} outlook ${strategy.context.outlook} \n" +
-    s"strategyType ${strategy.context.strategyType}\n" +
-    s"maxRisk ${strategy.context.maxRisk}\n" +
-    s"trades ${strategy.trades}\n"
-
 object YamlReader:
   def readYamlFiles(directory: String): Map[String, String] =
     // Find all .yaml files in the directory
@@ -110,30 +121,16 @@ object YamlReader:
       fileName -> content
     }.toMap
 
-@main def runYamlReader(): Unit =
-  val directory = "./src/main/resources/" // Replace with your directory
-  val yamlContents = YamlReader.readYamlFiles(directory)
-  yamlContents.foreach { case (file, content) =>
-    println(s"File: $file")
-    println(s"Content:\n$content")
-    println("------")
-    val ctx = DSLProcessor.parse(content)
-    printPretty(ctx)            
 
-  }
 
 object DSLProcessor {
-  def main(args: Array[String]): Unit = 
-    val yamlFile = "./src/main/resources/LongCallButterfly.yaml"
-    val yamlContent = new String(Files.readAllBytes(Paths.get(yamlFile)))
-    val ctx = parse(yamlContent)
-    printPretty(ctx)
+
 
   def parse(yamlContent: String): Strategy =
     // Parse YAML into DSLInput
     io.circe.yaml.parser.parse(yamlContent) match {
       case Right(json) =>
-        println(s"json $json")
+        //println(s"json $json")
         json.as[Strategy] match {
           case Right(strategy) => strategy
           case Left(decodingError) =>
@@ -142,22 +139,7 @@ object DSLProcessor {
       case Left(parsingError) =>
         throw new IllegalArgumentException(s"Parsing Error: ${parsingError.getMessage}")
     
-    /*
-    val underlying = DSL.context {
-        _.underlying("ABC").price(28).on("February 19, 2004")
-    }
-    
-    val strategy = DSL.strategy("Bear Call Spread") {
-    _.sell(OptionType.Call).expiry("March 2004").strike(30).premium(0.90)
-      .buy(OptionType.Call).expiry("April 2004").strike(40).premium(1.20)
-      .outlook("Bearish")
-      .maxRisk(1000)
-      .build()
-    }
-    
-    println(s"Underlying: $underlying")
-    println(s"Strategy: $strategy")
-    */
+  
   }
 }
 
@@ -171,7 +153,7 @@ object StrategyParser:
     input match
       case symbolRegex(symbol, price, date) =>
         val parsedDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("MMMM d, yyyy"))
-        Underlying(symbol, BigDecimal(price), parsedDate)
+        StockUnderlying(TradeType.Stock,symbol, BigDecimal(price), parsedDate)
       case _ =>
         throw new IllegalArgumentException(s"Invalid format for underlying information: $input")
 
@@ -243,7 +225,7 @@ object ContextParser:
       case multilineUnderlyingRegex(symbol, price, date) =>
         println(s"Matched underlying: symbol=$symbol, price=$price, date=$date") // Debugging: Show match
         val parsedDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        Underlying(symbol, BigDecimal(price), parsedDate)
+        StockUnderlying(TradeType.Stock,symbol, BigDecimal(price), parsedDate)
       case _ =>
         throw new IllegalArgumentException("Invalid format for underlying information")
     }

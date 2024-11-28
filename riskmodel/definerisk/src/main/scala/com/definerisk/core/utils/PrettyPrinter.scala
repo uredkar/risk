@@ -12,5 +12,10 @@ given [T](using printer: PrettyPrinter[T]): PrettyPrinter[Seq[T]] with
 def printPretty[T](value: T)(using PrettyPrinter[T]): Unit =
   println(summon[PrettyPrinter[T]].prettyPrint(value))
 
+
+
 extension [T](value: T)(using printer: PrettyPrinter[T])
     def pretty: String = printer.prettyPrint(value)
+
+
+

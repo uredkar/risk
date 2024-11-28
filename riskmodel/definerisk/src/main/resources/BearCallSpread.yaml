@@ -9,6 +9,7 @@ context:
   strategyType: "CapitalGain"
   volatility: "Low"
   underlying:
+    underlyingType: "Stock"
     symbol: "ABC"
     price: 50.0
     date: "2004-05-17"

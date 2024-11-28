@@ -7,18 +7,18 @@ import java.time.LocalDate
 
 @main def strategyApp(): Unit =
   // Example usage
-  given Underlying = Underlying("AAPL", 150.00, LocalDate.now)
+  given Underlying = StockUnderlying(TradeType.Stock,"AAPL", 150.00, LocalDate.now)
   val coveredCallAnalysis = CoveredCallWithAnalysis(coveredCall(155.00, 3.00, LocalDate.now.plusMonths(1)), 3.00, 0.0)
 
   // Implicitly provide the underlying context
   //given Underlying = Underlying("AAPL", 150.00, LocalDate.now)
-  given PrettyPrinter[OptionsStrategy] with
-    def prettyPrint(strategy: OptionsStrategy): String =
-      s"OptionsStrategy: ${strategy.legs.map(_.toString).mkString(", ")}"
+  given PrettyPrinter[Strategy] with
+    def prettyPrint(strategy: Strategy): String =
+      s"OptionsStrategy: ${strategy.trades.map(_.toString).mkString(", ")}"
 
   // Given instance for a generic list of strategies, if needed
-  given PrettyPrinter[List[OptionsStrategy]] with
-    def prettyPrint(strategies: List[OptionsStrategy]): String =
+  given PrettyPrinter[List[Strategy]] with
+    def prettyPrint(strategies: List[Strategy]): String =
       strategies.map(_.pretty).mkString("\n")
 
   // Define strategies
