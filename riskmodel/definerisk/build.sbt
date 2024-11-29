@@ -41,7 +41,7 @@ lazy val root = project
     
     //libraryDependencies += "com.typesafe.akka" %% "akka-http-spray-json" % "2.10.0",
     //libraryDependencies += "com.typesafe.akka" %% "akka-http" % "10.2.10",
-
+    
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.17" % Test,
     libraryDependencies += "org.typelevel" %% "discipline-core" % Versions.discipline % Test,
     libraryDependencies += "org.scalacheck" %% "scalacheck" % Versions.scalaCheck % Test,

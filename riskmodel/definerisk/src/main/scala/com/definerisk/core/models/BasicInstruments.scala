@@ -3,8 +3,10 @@ package com.definerisk.core.models
 import java.time.LocalDate
 import scala.language.implicitConversions
 import scala.math.BigDecimal
+import java.io.PrintWriter
+import scala.math._
 import  com.definerisk.core.utils.PrettyPrinter.{*,given}
-
+import java.time.temporal.ChronoUnit
 //case class Underlying(symbol: String, price: BigDecimal, date: LocalDate)
 trait UnderlyingType[T <: TradeType]
 
@@ -20,9 +22,7 @@ sealed trait Underlying {
   val date: LocalDate
 }
 
-object Underlying {
 
-}
 
 case class StockUnderlying(
     underlyingType: TradeType,
@@ -34,7 +34,7 @@ case class StockUnderlying(
 }
 
 case class ETFUnderlying(
-    override val underlyingType: TradeType,
+    underlyingType: TradeType,
     symbol: String,
     price: BigDecimal,
     date: LocalDate
@@ -91,6 +91,14 @@ enum Proficiency:
 enum Greeks:
     case Gamma, Theta, Vega, Rho
 
+case class TradeGreeks(
+  delta: BigDecimal,
+  gamma: BigDecimal,
+  vega: BigDecimal,
+  rho: BigDecimal,
+  theta: BigDecimal
+)
+
 enum PositionType:
   case Long, Short
 
@@ -101,20 +109,41 @@ object Trade:
     action: PositionType,     // long or short
     optionType: OptionType, // call or put
     expiry: LocalDate,     // Expiration Date
+    timeToExpiry: BigDecimal,
     strike: BigDecimal,     // Strike Price
     premium: BigDecimal,     // Option Premium
     quantity: Int
   ) extends Trade
 
+  object OptionTrade {
+
+  // Factory method with a given `currentDate`
+  def apply(
+      action: PositionType,
+      optionType: OptionType,
+      expiry: LocalDate,
+      strike: BigDecimal,
+      premium: BigDecimal,
+      quantity: Int
+  )(using currentDate: LocalDate): Trade.OptionTrade = {
+    val daysToExpiry = ChronoUnit.DAYS.between(currentDate, expiry)
+    val timeToExpiry = BigDecimal(daysToExpiry) / 365 // Convert days to years
+    OptionTrade(action, optionType, expiry, timeToExpiry, strike, premium, quantity)
+  }
+
+  // Default given instance for `currentDate`
+  given LocalDate = LocalDate.now()
+}
+
   case class StockTrade(
     action: PositionType,     
-    price: Double,     
+    price: BigDecimal,     
     quantity: Int
   ) extends Trade
 
   case class ETFTrade(
     action: PositionType,     
-    price: Double,     
+    price: BigDecimal,     
     quantity: Int
   ) extends Trade
 
@@ -122,6 +151,8 @@ case class Strategy(
     context: Context,
     trades: List[Trade] = List()
 ) 
+
+
 
 case class Context(
   name: String,
@@ -145,3 +176,5 @@ given PrettyPrinter[Strategy] with
     s"maxRisk ${strategy.context.maxRisk}\n" +
     s"trades ${strategy.trades}\n" + 
     s"End Strategy ----------------------\n"
+
+

@@ -2,57 +2,9 @@ package com.definerisk.core.OptionStrategies
 
 import java.time.LocalDate
 import com.definerisk.core.models.{*, given}
-/*
-// A single leg of a strategy (long/short option contract)
-case class StrategyLeg(contract: Trade.OptionTrade, isLong: Boolean)
 
-// A complete options strategy
-//case class OptionsStrategy(name: String, outlook: String, maxRisk: Double,legs: List[])
-//case class Underlying(symbol: String, price: Double, date: String)
-//case class OptionTrade(action: String, `type`: String, expiry: String, strike: Double, premium: Double)
-case class Strategy(name: String, outlook: String, maxRisk: Double, trades: List[Trade.OptionTrade])
-enum PositionType:
-  case Long, Short
+given LocalDate = LocalDate.now()
 
-sealed trait OptionType:
-  def tradeType: TradeType
-
-object OptionType:
-  case object Call extends OptionType:
-    val tradeType: TradeType = TradeType.Call
-
-  case object Put extends OptionType:
-    val tradeType: TradeType = TradeType.Put
-
-sealed trait EquitiesType:
-  def tradeType: TradeType
-
-object EquitiesType:
-  case object Stock extends EquitiesType:
-    val tradeType: TradeType = TradeType.Stock
-
-  case object ETF extends EquitiesType:
-    val tradeType: TradeType = TradeType.ETF
-
-enum Trade:
-  case OptionTrade(
-    action: PositionType,     // long or short
-    optionType: OptionType, // call or put
-    expiry: LocalDate,     // Expiration Date
-    strike: BigDecimal,     // Strike Price
-    premium: BigDecimal,     // Option Premium
-    quantity: Int
-  ) extends Trade
-
-  case StockTrade(
-    action: PositionType,     
-    price: Double,     
-    quantity: Int
-  ) extends Trade
-
-*/
-
-  
 def coveredCall(
   strikePrice: BigDecimal,
   premium: BigDecimal,

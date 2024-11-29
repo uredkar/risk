@@ -6,6 +6,8 @@ import java.time.LocalDate
 
 import com.definerisk.core.models.*
 
+given LocalDate = LocalDate.now()
+
 trait ProfitLossCalculator:
   def calculatePnL(spotPrices: List[BigDecimal]): List[BigDecimal]
 
@@ -14,15 +16,15 @@ extension (s: Strategy)
   def calculatePnL(spotPrices: List[BigDecimal]): List[BigDecimal] =
     spotPrices.map { S =>
       s.trades.map {
-        case Trade.OptionTrade(PositionType.Long,OptionType.Call,_,strike, premium,_) =>
+        case Trade.OptionTrade(PositionType.Long,OptionType.Call,_,_,strike, premium,_) =>
           BigDecimal(Math.max(S.toDouble - strike.toDouble, 0)) - premium
-        case Trade.OptionTrade( PositionType.Short,OptionType.Call,_,strike, premium,_) =>
+        case Trade.OptionTrade( PositionType.Short,OptionType.Call,_,_,strike, premium,_) =>
           (premium - BigDecimal(Math.max(S.toDouble - strike.toDouble, 0)))
-        case Trade.OptionTrade( PositionType.Long,OptionType.Put,_,strike, premium,_) =>
+        case Trade.OptionTrade( PositionType.Long,OptionType.Put,_,_,strike, premium,_) =>
           BigDecimal(Math.max(strike.toDouble - S.toDouble, 0)) - premium
-        case Trade.OptionTrade( PositionType.Short,OptionType.Put,_,strike, premium,_) =>
+        case Trade.OptionTrade( PositionType.Short,OptionType.Put,_,_,strike, premium,_) =>
           premium - BigDecimal(Math.max(strike.toDouble - S.toDouble, 0))
-        case Trade.StockTrade(action,price, quantity) =>  BigDecimal(-quantity) * BigDecimal(price)
+        case Trade.StockTrade(action,price, quantity) =>  BigDecimal(-quantity) * price
         //case _ => 0 //println("calculate pnl map case not found")
       }.sum
     }
@@ -37,7 +39,7 @@ extension (s: Strategy)
     T: BigDecimal
 ): GreeksCalculator.Greeks =
   s.trades.map {
-    case Trade.OptionTrade(PositionType.Long, optionType, _, strike, _, _) =>
+    case Trade.OptionTrade(PositionType.Long, optionType, _,_,strike, _, _) =>
       GreeksCalculator.calculate(
         optionType,
         spotPrice,
@@ -46,7 +48,7 @@ extension (s: Strategy)
         r,
         sigma
       )
-    case Trade.OptionTrade(PositionType.Short, optionType, _, strike, _, _) =>
+    case Trade.OptionTrade(PositionType.Short, optionType, _,_, strike, _, _) =>
       // Negate Greeks for short positions
       val g = GreeksCalculator.calculate(
         optionType,

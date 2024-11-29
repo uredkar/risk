@@ -21,6 +21,8 @@ import com.definerisk.core.models.{*, given}
 
 import io.circe._, io.circe.generic.auto._
 
+given LocalDate = LocalDate.now()
+
 // Decoder for LocalDate
 given Decoder[LocalDate] = Decoder.decodeString.emap { str =>
   try Right(LocalDate.parse(str, DateTimeFormatter.ISO_DATE))
@@ -238,16 +240,3 @@ object ContextParser:
       underlying = underlying
     )
 
-@main def runContextParser() =
-  val input = """
-    name: "Long Call Butterfly"
-    difficulty: "Intermediate"
-    dir5
-    direction: "Neutral"
-    strategyType: "Capital Gain"
-    volatility: "Low"
-    underlying: { symbol: "ABC",price: 50.0, date: "2004-05-17" }
-  """
-
-  val context = ContextParser.parseContext(input)
-  println(context)  

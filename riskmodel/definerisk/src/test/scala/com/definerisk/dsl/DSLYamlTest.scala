@@ -38,8 +38,8 @@ class DSLYamlTest extends AnyFunSuite with Matchers {
         val yamlContents = YamlReader.readYamlFiles(directory)
         yamlContents.foreach { case (file, content) =>
         println(s"File: $file")
-        println(s"Content:\n$content")
-        println("------")
+        //println(s"Content:\n$content")
+        //println("------")
         val ctx = DSLProcessor.parse(content)
         printPretty(ctx)  
         }
@@ -58,8 +58,8 @@ class DSLYamlTest extends AnyFunSuite with Matchers {
         val yamlContents = YamlReader.readYamlFiles(directory)
         yamlContents.foreach { case (file, content) =>
             println(s"File: $file")
-            println(s"Content:\n$content")
-            println("------")
+            //println(s"Content:\n$content")
+            //println("------")
             val ctx = DSLProcessor.parse(content)
             printPretty(ctx)            
         }
