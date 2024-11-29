@@ -23,6 +23,11 @@ def erf(x: Double): Double = {
   sign * y
 }
 
+def normCDF(x: Double): Double = {
+  0.5 * (1 + erf(x / sqrt(2)))
+}
+
+
 object OptionsCalculator {
     
 

@@ -3,8 +3,10 @@ package com.definerisk.core.calc
 import java.io._
 import scala.math.{exp, sqrt, log, Pi}
 import java.time.LocalDate
-
+//import breeze.stats.distributions._
 import com.definerisk.core.models.*
+import java.io.PrintWriter
+import java.nio.file.{Files, Paths}
 
 given LocalDate = LocalDate.now()
 
@@ -175,6 +177,121 @@ object Strategies:
 
     // Add more strategies (e.g., Butterfly, Iron Condor) here
 case class PnLPoint(spotPrice: BigDecimal, pnl: BigDecimal)
+
+
+object CombinedGreekCalculator {
+  case class Greeks(
+    delta: BigDecimal = 0,
+    gamma: BigDecimal = 0,
+    vega: BigDecimal = 0,
+    rho: BigDecimal = 0,
+    theta: BigDecimal = 0
+  )
+
+  def calculateGreeks(
+      trade: Trade,
+      underlyingPrice: BigDecimal,
+      timeToExpiry: BigDecimal,
+      volatility: BigDecimal,
+      riskFreeRate: BigDecimal
+  ): Greeks = {
+    trade match {
+      case Trade.OptionTrade(action, optionType, expiry, _, strike, premium, quantity) =>
+        // Black-Scholes Greeks for options
+        val d1 = (Math.log((underlyingPrice / strike).toDouble) +
+          ((riskFreeRate + (volatility * volatility) / 2) * timeToExpiry.toDouble)) /
+          (volatility.toDouble * Math.sqrt(timeToExpiry.toDouble))
+        val d2 = d1 - volatility.toDouble * Math.sqrt(timeToExpiry.toDouble)
+
+        //val normalD1 = breeze.stats.distributions.Gaussian(0, 1).cdf(d1)
+        //val normalD2 = breeze.stats.distributions.Gaussian(0, 1).cdf(d2)
+        val normalD1 = normCDF(d1.toDouble)
+        val normalD2 = normCDF(d2.toDouble)
+
+        val delta = optionType match {
+          case OptionType.Call => normalD1
+          case OptionType.Put  => normalD1 - 1
+        }
+
+        val gamma = Math.exp(-d1.toDouble * d1.toDouble / 2) / (underlyingPrice.toDouble * volatility.toDouble * Math.sqrt(2 * Math.PI * timeToExpiry.toDouble))
+
+        val vega = underlyingPrice.toDouble * Math.exp(-d1.toDouble * d1.toDouble / 2) * Math.sqrt(timeToExpiry.toDouble) / Math.sqrt(2 * Math.PI)
+
+        val rho = optionType match {
+          case OptionType.Call => normalD2 * strike.toDouble * Math.exp(-riskFreeRate.toDouble * timeToExpiry.toDouble)
+          case OptionType.Put  => -normalD2 * strike.toDouble * Math.exp(-riskFreeRate.toDouble * timeToExpiry.toDouble)
+        }
+
+        val theta = optionType match {
+          case OptionType.Call =>
+            (-underlyingPrice.toDouble * Math.exp(-d1.toDouble * d1.toDouble / 2) * volatility.toDouble / (2 * Math.sqrt(2 * Math.PI * timeToExpiry.toDouble))) -
+              riskFreeRate.toDouble * strike.toDouble * Math.exp(-riskFreeRate.toDouble * timeToExpiry.toDouble) * normalD2
+          case OptionType.Put =>
+            (-underlyingPrice.toDouble * Math.exp(-d1.toDouble * d1.toDouble / 2) * volatility.toDouble / (2 * Math.sqrt(2 * Math.PI * timeToExpiry.toDouble))) +
+              riskFreeRate.toDouble * strike.toDouble * Math.exp(-riskFreeRate.toDouble * timeToExpiry.toDouble) * normalD2
+        }
+
+        val multiplier = if (action == PositionType.Long) 1 else -1
+        Greeks(
+          delta = BigDecimal(delta) * multiplier * quantity,
+          gamma = BigDecimal(gamma) * multiplier * quantity,
+          vega = BigDecimal(vega) * multiplier * quantity,
+          rho = BigDecimal(rho) * multiplier * quantity,
+          theta = BigDecimal(theta) * multiplier * quantity
+        )
+
+      case _: Trade.StockTrade | _: Trade.ETFTrade =>
+        // Non-option trades do not contribute to Greeks in this implementation
+        Greeks()
+    }
+  }
+
+  def calculateStrategyGreeks(
+      trades: List[Trade],
+      underlyingPrice: BigDecimal,
+      timeToExpiry: BigDecimal,
+      volatility: BigDecimal,
+      riskFreeRate: BigDecimal
+  ): Greeks = {
+    trades.foldLeft(Greeks()) { (totalGreeks, trade) =>
+      val tradeGreeks = calculateGreeks(trade, underlyingPrice, timeToExpiry, volatility, riskFreeRate)
+      Greeks(
+        delta = totalGreeks.delta + tradeGreeks.delta,
+        gamma = totalGreeks.gamma + tradeGreeks.gamma,
+        vega = totalGreeks.vega + tradeGreeks.vega,
+        rho = totalGreeks.rho + tradeGreeks.rho,
+        theta = totalGreeks.theta + tradeGreeks.theta
+      )
+    }
+  }
+  def generateCsvWithGreeks(
+      strategy: Strategy,
+      underlyingPrices: List[BigDecimal],
+      volatility: BigDecimal,
+      riskFreeRate: BigDecimal,
+      filePath: String
+  ): Unit = {
+    val csvContent = new StringBuilder
+    csvContent.append("SpotPrice,PnL,Delta,Gamma,Vega,Rho,Theta\n")
+
+    underlyingPrices.foreach { price =>
+      val combinedPnL = CombineOptionCalculator.calculateCombinedPnL(strategy.trades, List(price)).head
+      val combinedGreeks = calculateStrategyGreeks(
+        strategy.trades,
+        underlyingPrice = price,
+        timeToExpiry = BigDecimal(0.25), // Example: 3 months
+        volatility = volatility,
+        riskFreeRate = riskFreeRate
+      )
+      csvContent.append(
+        s"$price,$combinedPnL,${combinedGreeks.delta},${combinedGreeks.gamma},${combinedGreeks.vega},${combinedGreeks.rho},${combinedGreeks.theta}\n"
+      )
+    }
+
+    Files.write(Paths.get(filePath), csvContent.toString.getBytes)
+    println(s"CSV with Greeks and P&L generated at: $filePath")
+  }
+}
 
 @main def testStrategies() =
   import Strategies._

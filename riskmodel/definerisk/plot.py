@@ -11,7 +11,7 @@ plt.ylabel("PnL")
 plt.title("PnL Diagram")
 plt.legend()
 plt.grid()
-plt.show()
+plt.show(block=False)
 
 
 data = pd.read_csv("strategy_pnl.csv")
@@ -23,7 +23,7 @@ plt.ylabel("PnL")
 plt.title("PnL Diagram")
 plt.legend()
 plt.grid()
-plt.show()
+plt.show(block=False)
 
 data = pd.read_csv("individualoptions.csv")
 
@@ -33,4 +33,15 @@ plt.ylabel("PnL")
 plt.title("PnL Diagram")
 plt.legend()
 plt.grid()
-plt.show()
+plt.show(block=False)
+
+
+data = pd.read_csv("strategy_pnl_and_greeks.csv")
+
+plt.plot(data["SpotPrice"], data["PnL"], label="PnL")
+plt.xlabel("Spot Price")
+plt.ylabel("PnL")
+plt.title("PnL Diagram")
+plt.legend()
+plt.grid()
+plt.show(block=True)

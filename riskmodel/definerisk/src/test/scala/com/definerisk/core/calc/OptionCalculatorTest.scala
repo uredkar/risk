@@ -27,10 +27,32 @@ class OptionCalculatorTest extends AnyFunSuite with Matchers {
 
   test("Combined Option PnL") {
     val expiryDate: LocalDate = summon[LocalDate].plusMonths(3)
+    val trades = List(
+    Trade.OptionTrade(PositionType.Long, OptionType.Call,expiryDate, 100, 5, 1),
+    Trade.OptionTrade(PositionType.Short,OptionType.Put,expiryDate, 90, 4, 1)
+    //Trade.StockTrade(PositionType.Long, 90, 10)
+    )
+    val strategy = Strategy(
+        context = Context(
+        name = "Sample Strategy",
+        difficulty = "Intermediate",
+        direction = "Neutral",
+        volatility = "Moderate",
+        underlying = None
+        ),
+        trades = trades
+        )
+
+    val priceRange = (80 to 120 by 5).map(BigDecimal(_)).toList
+
+    CombineOptionCalculator.generateCsv(strategy, priceRange, "strategy_pnl.csv")
+    }
+
+    test("Combined Greeks"){
+        val expiryDate: LocalDate = summon[LocalDate].plusMonths(3)
         val trades = List(
-        Trade.OptionTrade(PositionType.Long, OptionType.Call,expiryDate, 100, 5, 1),
-        Trade.OptionTrade(PositionType.Short,OptionType.Put,expiryDate, 90, 4, 1)
-        //Trade.StockTrade(PositionType.Long, 90, 10)
+            Trade.OptionTrade(PositionType.Long, OptionType.Call,expiryDate, 100, 5, 1),
+            Trade.OptionTrade(PositionType.Short,OptionType.Put,expiryDate, 90, 4, 1)
         )
         val strategy = Strategy(
             context = Context(
@@ -41,10 +63,14 @@ class OptionCalculatorTest extends AnyFunSuite with Matchers {
             underlying = None
             ),
             trades = trades
-            )
-
+        )
         val priceRange = (80 to 120 by 5).map(BigDecimal(_)).toList
-
-        CombineOptionCalculator.generateCsv(strategy, priceRange, "strategy_pnl.csv")
+        CombinedGreekCalculator.generateCsvWithGreeks(
+            strategy = strategy,
+            underlyingPrices = priceRange,
+            volatility = BigDecimal(0.2),    // Example: 20% volatility
+            riskFreeRate = BigDecimal(0.05), // Example: 5% risk-free rate
+            filePath = "strategy_pnl_and_greeks.csv"
+        )
     }
 }
