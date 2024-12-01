@@ -1,0 +1,23 @@
+context:
+  name: "Covered Call"
+  difficulty: "Intermediate"
+  direction: "Neutral"
+  outlook: "direction Neutral"
+  maxReward: "Difference between adjacent strikes - net debit"
+  maxRisk: "Net Debit Paid"
+  breakEvenDown: "Higher Strike - net debit"
+  strategyType: "Income"
+  volatility: "Low"
+  underlying:
+    underlyingType: "Stock"
+    symbol: "NVDA"
+    price: 138.12
+    date: "2024-11-30"
+trades:
+  - type: "OptionTrade"
+    action: "Short"
+    optionType: "Call"
+    expiry: "2025-03-21"
+    strike: 146.0
+    premium: 12.45
+    quantity: 1

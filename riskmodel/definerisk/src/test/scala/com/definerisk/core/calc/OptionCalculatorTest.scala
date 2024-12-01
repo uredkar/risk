@@ -73,4 +73,31 @@ class OptionCalculatorTest extends AnyFunSuite with Matchers {
             filePath = "strategy_pnl_and_greeks.csv"
         )
     }
+
+     test("Covered Call with Downside Protection for fun"){
+        val expiryDate: LocalDate = summon[LocalDate].plusMonths(3)
+        val trades = List(
+            Trade.StockTrade(PositionType.Long, 138,  100),
+            Trade.OptionTrade(PositionType.Short,OptionType.Call,expiryDate, 142, 14.27, 1),
+            Trade.OptionTrade(PositionType.Long,OptionType.Put,expiryDate, 130, 9.36, 1)
+        )
+        val strategy = Strategy(
+            context = Context(
+            name = "Sample Strategy",
+            difficulty = "Intermediate",
+            direction = "Neutral",
+            volatility = "Moderate",
+            underlying = None
+            ),
+            trades = trades
+        )
+        val priceRange = (100 to 200 by 5).map(BigDecimal(_)).toList
+        CombinedGreekCalculator.generateCsvWithGreeks(
+            strategy = strategy,
+            underlyingPrices = priceRange,
+            volatility = BigDecimal(0.2),    // Example: 20% volatility
+            riskFreeRate = BigDecimal(0.05), // Example: 5% risk-free rate
+            filePath = "coveredcall.csv"
+        )
+    }
 }

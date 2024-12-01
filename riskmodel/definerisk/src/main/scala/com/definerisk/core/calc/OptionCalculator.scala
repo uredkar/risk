@@ -111,30 +111,58 @@ object CombineOptionCalculator {
         trades: List[Trade],
         underlyingPrices: List[BigDecimal]
     ): List[BigDecimal] = {
+        println("CombineOptionCalculator.calculateCombinedPnL")
         underlyingPrices.map { price =>
             trades.foldLeft(BigDecimal(0)) { (totalPnL, trade) =>
             trade match {
                 case Trade.OptionTrade(action, optionType, expiry, _, strike, premium, quantity) =>
-                val intrinsicValue = optionType match {
-                    case OptionType.Call => (price - strike).max(0)
-                    case OptionType.Put  => (strike - price).max(0)
-                }
-                val tradePnL = action match {
-                    case PositionType.Long =>
-                    (intrinsicValue - premium) * quantity
-                    case PositionType.Short =>
-                    (premium - intrinsicValue) * quantity
-                }
-                totalPnL + tradePnL
+                  val intrinsicValue = optionType match {
+                      case OptionType.Call => (price - strike).max(0)
+                      case OptionType.Put  => (strike - price).max(0)
+                  }
+                  val tradePnL = action match {
+                      case PositionType.Long =>
+                      (intrinsicValue - premium) * quantity
+                      case PositionType.Short =>
+                      (premium - intrinsicValue) * quantity
+                  }
+                  totalPnL + tradePnL
 
-                case Trade.StockTrade(action, tradePrice, quantity) =>
-                val tradePnL = action match {
-                    case PositionType.Long =>
-                    (price - tradePrice) * quantity
-                    case PositionType.Short =>
-                    (tradePrice - price) * quantity
-                }
-                totalPnL + tradePnL
+               
+                case Trade.StockTrade(action, stockPrice, quantity) =>
+                  println("Trace.StockTrade")
+                  // Adjust for the presence of a short call
+                  val cappedStockPnL = trades.collectFirst {
+                    case Trade.OptionTrade(PositionType.Short, OptionType.Call,_, _, strike, premium, _) =>
+                      println(s"Found short call $strike")
+                      // If there's a short call, cap the stock profit at the strike price
+                      if (price > strike) (strike - stockPrice) * quantity
+                      else (price - stockPrice) * quantity
+                  }.getOrElse((price - stockPrice) * quantity) // Default if no short call
+
+                  totalPnL + (if (action == PositionType.Long) cappedStockPnL else -cappedStockPnL)
+
+                  // Step 1: Apply capping due to Short Calls
+                  val shortCallCaps = trades.collect {
+                    case Trade.OptionTrade(PositionType.Short, OptionType.Call, _,_, strike, premium, _)
+                      if price > strike =>
+                        ((strike - stockPrice) + premium) * quantity
+                  }
+                  val stockPnLWithShortCalls = shortCallCaps match {
+                    case Nil => (price - stockPrice) * quantity // No short calls
+                    case caps => caps.min // Apply the lowest cap
+                  }
+
+                  // Step 2: Adjust downside due to Long Puts
+                  val longPutOffsets = trades.collect {
+                    case Trade.OptionTrade(PositionType.Long, OptionType.Put, _, _, strike, premium, _) 
+                      if price < strike =>
+                        ((strike - price) - premium) * quantity
+                  }
+                  val stockPnLWithPuts = stockPnLWithShortCalls + longPutOffsets.sum
+
+                  totalPnL + (if (action == PositionType.Long) stockPnLWithPuts else -stockPnLWithPuts)
+
 
                 case Trade.ETFTrade(action, tradePrice, quantity) =>
                 val tradePnL = action match {
