@@ -62,8 +62,6 @@ given Database with
 trait Logger:
   def log(message: String): Unit
 
-given Logger with
-  def log(message: String): Unit = println(s"[INFO]: $message")
 
 trait Authenticator:
   def authenticate(user: String): Boolean
@@ -147,3 +145,24 @@ def fetchUser(id: Int)(using db: Database): String =
 
   debugGivenInstances[Show[Int]] // Outputs: Some instance found for Int
   debugGivenInstances[Show[Double]] // Outputs: No instance found    
+
+// A given instance of Logger
+given ConsoleLogger: Logger with {
+  def log(message: String): Unit = println(s"LOG: $message")
+}
+
+//given Logger with
+//  def log(message: String): Unit = println(s"[INFO]: $message")
+
+
+// A context function that requires a Logger
+val logMessage: Logger ?=> String => Unit = message => summon[Logger].log(message)
+
+// Use the context function
+def processMessage(message: String): Unit = {
+  logMessage(message) // Automatically resolves the given Logger
+}
+
+@main def learnContextFunction() : Unit = 
+  processMessage("Hello, Context Functions!") // LOG: Hello, Context Functions!
+  logMessage("Direct Log Message")

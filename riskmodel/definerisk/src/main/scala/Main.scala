@@ -14,7 +14,7 @@ import java.time.LocalDate
   //given Underlying = Underlying("AAPL", 150.00, LocalDate.now)
   given PrettyPrinter[Strategy] with
     def prettyPrint(strategy: Strategy): String =
-      s"OptionsStrategy: ${strategy.trades.map(_.toString).mkString(", ")}"
+      s"OptionsStrategy: ${strategy.legs.map(_.toString).mkString(", ")}"
 
   // Given instance for a generic list of strategies, if needed
   given PrettyPrinter[List[Strategy]] with

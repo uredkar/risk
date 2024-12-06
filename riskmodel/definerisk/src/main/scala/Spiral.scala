@@ -124,7 +124,12 @@ object Spiral:
         x
 
   def main(args: Array[String]) =
-    val nSides = args(0).toInt
-    println(spiral(nSides, 0))
+    if (args.length == 0) {
+      println(spiral(17, 0))
+    }
+    else {
+      val nSides = args(0).toInt
+      println(spiral(nSides, 0))
+    }
 
 end Spiral

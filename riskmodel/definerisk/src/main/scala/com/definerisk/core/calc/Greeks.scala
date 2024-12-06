@@ -17,18 +17,21 @@ trait ProfitLossCalculator:
 extension (s: Strategy) 
   def calculatePnL(spotPrices: List[BigDecimal]): List[BigDecimal] =
     spotPrices.map { S =>
-      s.trades.map {
-        case Trade.OptionTrade(PositionType.Long,OptionType.Call,_,_,strike, premium,_) =>
-          BigDecimal(Math.max(S.toDouble - strike.toDouble, 0)) - premium
-        case Trade.OptionTrade( PositionType.Short,OptionType.Call,_,_,strike, premium,_) =>
-          (premium - BigDecimal(Math.max(S.toDouble - strike.toDouble, 0)))
-        case Trade.OptionTrade( PositionType.Long,OptionType.Put,_,_,strike, premium,_) =>
-          BigDecimal(Math.max(strike.toDouble - S.toDouble, 0)) - premium
-        case Trade.OptionTrade( PositionType.Short,OptionType.Put,_,_,strike, premium,_) =>
-          premium - BigDecimal(Math.max(strike.toDouble - S.toDouble, 0))
-        case Trade.StockTrade(action,price, quantity) =>  BigDecimal(-quantity) * price
+      val sums = s.legs.map { l =>
+        l.trades.map {
+          case Trade.OptionTrade(_,_,PositionType.Long,OptionType.Call,_,_,strike, premium,_) =>
+            BigDecimal(Math.max(S.toDouble - strike.toDouble, 0)) - premium
+          case Trade.OptionTrade(_,_, PositionType.Short,OptionType.Call,_,_,strike, premium,_) =>
+            (premium - BigDecimal(Math.max(S.toDouble - strike.toDouble, 0)))
+          case Trade.OptionTrade(_,_, PositionType.Long,OptionType.Put,_,_,strike, premium,_) =>
+            BigDecimal(Math.max(strike.toDouble - S.toDouble, 0)) - premium
+          case Trade.OptionTrade(_,_, PositionType.Short,OptionType.Put,_,_,strike, premium,_) =>
+            premium - BigDecimal(Math.max(strike.toDouble - S.toDouble, 0))
+          case Trade.StockTrade(_,_,action,price, quantity) =>  BigDecimal(-quantity) * price
         //case _ => 0 //println("calculate pnl map case not found")
-      }.sum
+        }.sum
+      }
+      sums.sum
     }
 
   //def maxReward: BigDecimal = s.trades.map { case Trade.OptionTrade(PositionType.Long,OptionType.Call,_,strike, premium,_) => premium}.sum
@@ -39,18 +42,21 @@ extension (s: Strategy)
     r: BigDecimal,
     sigma: BigDecimal,
     T: BigDecimal
-): GreeksCalculator.Greeks =
-  s.trades.map {
-    case Trade.OptionTrade(PositionType.Long, optionType, _,_,strike, _, _) =>
-      GreeksCalculator.calculate(
-        optionType,
-        spotPrice,
-        strike,
-        T,
-        r,
-        sigma
-      )
-    case Trade.OptionTrade(PositionType.Short, optionType, _,_, strike, _, _) =>
+): List[GreeksCalculator.Greeks] =
+
+  s.legs.map {
+    l =>
+      l.trades.map {
+      case Trade.OptionTrade(_,_,PositionType.Long, optionType, _,_,strike, _, _) =>
+        GreeksCalculator.calculate(
+          optionType,
+          spotPrice,
+          strike,
+          T,
+          r,
+          sigma
+        )
+      case Trade.OptionTrade(_,_,PositionType.Short, optionType, _,_, strike, _, _) =>
       // Negate Greeks for short positions
       val g = GreeksCalculator.calculate(
         optionType,
@@ -66,7 +72,7 @@ extension (s: Strategy)
         vega = -g.vega,
         rho = -g.rho
       )
-    case Trade.StockTrade(action, price, quantity) =>
+    case Trade.StockTrade(_,_,action, price, quantity) =>
       // Delta is ±quantity, others are 0
       val delta = action match
         case PositionType.Long  => BigDecimal(quantity)
@@ -86,6 +92,7 @@ extension (s: Strategy)
       g1.vega + g2.vega,
       g1.rho + g2.rho
     )
+  }
   }
 
   
@@ -159,20 +166,23 @@ object Strategies:
     def straddle(strike: BigDecimal, premium: BigDecimal,  expiryDate: LocalDate): Strategy =
      
       Strategy(
+        "id",
         context,
-        List(
-          Trade.OptionTrade(PositionType.Long,OptionType.Call,expiryDate, strike, premium,1),
-          Trade.OptionTrade(PositionType.Long,OptionType.Put,expiryDate, strike, premium,1)
-        )
+        List(OptionLeg("id",List(
+                  Trade.OptionTrade("id",LocalDate.now(),PositionType.Long,OptionType.Call,expiryDate, strike, premium,1),
+                  Trade.OptionTrade("id",LocalDate.now(),PositionType.Long,OptionType.Put,expiryDate, strike, premium,1)
+                )
+        ))
       )
 
     def strangle(callStrike: BigDecimal, putStrike: BigDecimal, premium: BigDecimal,expiryDate: LocalDate): Strategy =
       Strategy(
+        "id",
         context,
-        List(
-          Trade.OptionTrade(PositionType.Long, OptionType.Call,expiryDate, callStrike, premium,1),
-          Trade.OptionTrade(PositionType.Long,OptionType.Put, expiryDate, putStrike, premium,1)
-        )
+        List(OptionLeg("id",List(
+          Trade.OptionTrade("id",LocalDate.now(),PositionType.Long, OptionType.Call,expiryDate, callStrike, premium,1),
+          Trade.OptionTrade("id",LocalDate.now(),PositionType.Long,OptionType.Put, expiryDate, putStrike, premium,1)
+        )))
       )
 
     // Add more strategies (e.g., Butterfly, Iron Condor) here
@@ -196,7 +206,7 @@ object CombinedGreekCalculator {
       riskFreeRate: BigDecimal
   ): Greeks = {
     trade match {
-      case Trade.OptionTrade(action, optionType, expiry, _, strike, premium, quantity) =>
+      case Trade.OptionTrade(_,_,action, optionType, expiry, _, strike, premium, quantity) =>
         // Black-Scholes Greeks for options
         val d1 = (Math.log((underlyingPrice / strike).toDouble) +
           ((riskFreeRate + (volatility * volatility) / 2) * timeToExpiry.toDouble)) /
@@ -275,16 +285,18 @@ object CombinedGreekCalculator {
     csvContent.append("SpotPrice,PnL,Delta,Gamma,Vega,Rho,Theta\n")
 
     underlyingPrices.foreach { price =>
-      val combinedPnL = CombineOptionCalculator.calculateCombinedPnL(strategy.trades, List(price)).head
-      val combinedGreeks = calculateStrategyGreeks(
-        strategy.trades,
-        underlyingPrice = price,
-        timeToExpiry = BigDecimal(0.25), // Example: 3 months
-        volatility = volatility,
-        riskFreeRate = riskFreeRate
-      )
-      csvContent.append(
-        s"$price,$combinedPnL,${combinedGreeks.delta},${combinedGreeks.gamma},${combinedGreeks.vega},${combinedGreeks.rho},${combinedGreeks.theta}\n"
+      strategy.legs.map(leg => 
+        val combinedPnL = CombineOptionCalculator.calculateCombinedPnL(leg.trades, List(price)).head
+        val combinedGreeks = calculateStrategyGreeks(
+          leg.trades,
+          underlyingPrice = price,
+          timeToExpiry = BigDecimal(0.25), // Example: 3 months
+          volatility = volatility,
+          riskFreeRate = riskFreeRate
+        )
+        csvContent.append(
+          s"$price,$combinedPnL,${combinedGreeks.delta},${combinedGreeks.gamma},${combinedGreeks.vega},${combinedGreeks.rho},${combinedGreeks.theta}\n"
+        )
       )
     }
 

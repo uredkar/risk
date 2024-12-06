@@ -1,3 +1,5 @@
+
+strategyId: "ST1"
 context:
   name: "Long Call Butterfly"
   difficulty: "Intermediate"
@@ -13,22 +15,47 @@ context:
     symbol: "ABC"
     price: 50.0
     date: "2004-05-17"
-trades:
-  - type: "OptionTrade"
-    action: "Long"
-    optionType: "Call"
-    expiry: "2024-12-20"
-    strike: 100.0
-    premium: 5.0
-    quantity: 1
-  - type: "OptionTrade"
-    action: "Short"
-    optionType: "Call"
-    expiry: "2024-12-20"
-    strike: 100.0
-    premium: 5.0
-    quantity: 1
-  - type: "StockTrade"
-    action: "Long"
-    price: 95.0
-    quantity: 100
+legs:    
+  - optionLeg:
+      legId: "L1"
+      trades:
+        - type: "OptionTrade"
+          action: "Long"
+          optionType: "Call"
+          expiry: "2024-12-20"
+          strike: 100.0
+          premium: 5.0
+          quantity: 1
+        - type: "OptionTrade"
+          action: "Short"
+          optionType: "Call"
+          expiry: "2024-12-20"
+          strike: 100.0
+          premium: 5.0
+          quantity: 1
+        - type: "StockTrade"
+          action: "Long"
+          price: 95.0
+          quantity: 100
+
+  - optionLeg:
+      legId: "L2"
+      trades:
+        - type: "OptionTrade"
+          action: "Long"
+          optionType: "Call"
+          expiry: "2024-12-20"
+          strike: 100.0
+          premium: 5.0
+          quantity: 1
+        - type: "OptionTrade"
+          action: "Short"
+          optionType: "Call"
+          expiry: "2024-12-20"
+          strike: 100.0
+          premium: 5.0
+          quantity: 1
+        - type: "StockTrade"
+          action: "Long"
+          price: 95.0
+          quantity: 100

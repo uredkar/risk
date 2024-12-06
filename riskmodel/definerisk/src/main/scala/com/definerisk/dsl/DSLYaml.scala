@@ -2,24 +2,33 @@ package com.definerisk.core.dsl
 
 
 
-import io.circe.yaml.parser
-import io.circe.generic.auto._
-import io.circe._
-import java.nio.file.{Files, Paths}
+
+import java.nio.file.{Files, Path, Paths}
 import scala.jdk.CollectionConverters._
-import scala.io.Source
 
-import io.circe.syntax._
-import io.circe.generic.auto._
+//import org.yaml.snakeyaml.Yaml
+//import org.yaml.snakeyaml.constructor.Constructor
+
+
+
+//import io.circe.yaml.parser
+//import io.circe.generic.auto._
+//import io.circe._
+//import io.circe.syntax._
+//import io.circe.generic.auto._
+import io.circe.generic.semiauto._
+import io.circe.yaml.syntax._
 import io.circe.yaml.Printer
-
+import io.circe._
+import io.circe.Decoder.importedDecoder
+import scala.io.Source
 import scala.util.matching.Regex
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import com.definerisk.core.models.{*, given}
 
-import io.circe._, io.circe.generic.auto._
+
 
 given LocalDate = LocalDate.now()
 
@@ -76,6 +85,19 @@ given Decoder[Underlying] = Decoder.instance { cursor =>
     }
 }
 
+//given Decoder[OptionLeg] = deriveDecoder[OptionLeg]
+given Decoder[OptionLeg] with
+  def apply(c: HCursor): Decoder.Result[OptionLeg] =
+    c.downField("optionLeg").as[HCursor].flatMap { optionLegCursor =>
+      for {
+        legId  <- optionLegCursor.downField("legId").as[String]
+        trades <- optionLegCursor.downField("trades").as[List[Trade]]
+      } yield OptionLeg(legId, trades)
+    }
+
+given Decoder[Context] = deriveDecoder[Context]
+given Decoder[Strategy] = deriveDecoder[Strategy]
+
 given Decoder[Trade] = Decoder.instance { cursor =>
   cursor.downField("type").as[String].flatMap {
     case "OptionTrade" =>
@@ -86,24 +108,53 @@ given Decoder[Trade] = Decoder.instance { cursor =>
         strike     <- cursor.downField("strike").as[BigDecimal]
         premium    <- cursor.downField("premium").as[BigDecimal]
         quantity   <- cursor.downField("quantity").as[Int]
-      yield Trade.OptionTrade(action, optionType, expiry, strike, premium,quantity)
+      yield Trade.OptionTrade("id",LocalDate.now(),action, optionType, expiry, strike, premium,quantity)
 
     case "StockTrade" =>
       for
         action   <- cursor.downField("action").as[PositionType]
         price    <- cursor.downField("price").as[Double]
         quantity <- cursor.downField("quantity").as[Int]
-      yield Trade.StockTrade(action, price, quantity)
+      yield Trade.StockTrade("id",LocalDate.now(),action, price, quantity)
 
     case other =>
       Left(DecodingFailure(s"Unknown trade type: $other", cursor.history))
   }
 }
-
-given Decoder[Strategy] = Decoder.forProduct2(
+/*
+given Decoder[Strategy] = Decoder.forProduct3(
+  "strategyId",
   "context",
-  "trades"
+  "legs"
 )(Strategy.apply)
+*/
+
+class YamlStreamProcessor[T: Decoder](directory: String) {
+  private lazy val yamlFiles = LazyList.from { 
+    Files
+    .list(Paths.get(directory))
+    .filter(Files.isRegularFile(_))
+    .filter(_.toString.endsWith(".yaml"))
+    .iterator()
+    .asScala
+    .toList
+  }
+  
+  lazy val stream: LazyList[Strategy] = yamlFiles.to(LazyList).flatMap { file =>
+    LazyList.from {
+      val content = Source.fromFile(file.toFile).mkString
+      val parsedResult: Either[String, Strategy] = DSLProcessor.parse(content) // Explicit type
+      parsedResult match {
+        case Right(strategy) => List(strategy) // Ensure this returns List[Strategy]
+        case Left(error) =>
+          println(s"Error parsing file ${file.toFile.getName}: $error")
+          List.empty[Strategy] // Explicitly return an empty List[Strategy] in case of failure
+      }
+    }
+}
+
+  def process(handler: Strategy => Any): Unit = stream.foreach(handler)
+}
 
 
 
@@ -128,115 +179,22 @@ object YamlReader:
 object DSLProcessor {
 
 
-  def parse(yamlContent: String): Strategy =
+  def parse(yamlContent: String): Either[String,Strategy] =
     // Parse YAML into DSLInput
     io.circe.yaml.parser.parse(yamlContent) match {
       case Right(json) =>
         //println(s"json $json")
         json.as[Strategy] match {
-          case Right(strategy) => strategy
+          case Right(strategy) => Right(strategy)
           case Left(decodingError) =>
-            throw new IllegalArgumentException(s"Decoding Error: ${decodingError.getMessage}")
+            Left(s"Decoding Error: ${decodingError.getMessage}")
         }
       case Left(parsingError) =>
-        throw new IllegalArgumentException(s"Parsing Error: ${parsingError.getMessage}")
+        Left(s"Parsing Error: ${parsingError.getMessage}")
     
   
   }
 }
 
 
-object StrategyParser:
-
-  private val symbolRegex: Regex = raw"(\w+) is trading at \$$(\d+\.\d+) on (\w+ \d{1,2}, \d{4})\.".r
-  private val optionTradeRegex: Regex = raw"Buy the (\w+) (\d{4}) \$$(\d+\.\d+) strike (\w+) for \$$(\d+\.\d+)\.".r
-
-  def parseUnderlying(input: String): Underlying =
-    input match
-      case symbolRegex(symbol, price, date) =>
-        val parsedDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("MMMM d, yyyy"))
-        StockUnderlying(TradeType.Stock,symbol, BigDecimal(price), parsedDate)
-      case _ =>
-        throw new IllegalArgumentException(s"Invalid format for underlying information: $input")
-
-  def parseTrades(input: String): List[Trade] =
-    input match
-      case optionTradeRegex(month, year, strike, optionType, premium) =>
-        val expiry = LocalDate.parse(s"$month 1 $year", DateTimeFormatter.ofPattern("MMMM d yyyy")).withDayOfMonth(1).plusMonths(1).minusDays(1)
-        List(
-          Trade.OptionTrade(
-            action = PositionType.Long,
-            optionType = if optionType.equalsIgnoreCase("call") then OptionType.Call else OptionType.Put,
-            expiry = expiry,
-            strike = BigDecimal(strike),
-            premium = BigDecimal(premium),
-            quantity = 1
-          )
-        )
-      case _ =>
-        throw new IllegalArgumentException(s"Invalid format for trade information: $input")
-
-  def parse(input: String): Strategy =
-    // Sample hardcoded parsing; expand for full inputs
-    val underlyingInput = "ABCD is trading at $28.88 on February 19, 2004."
-    val tradesInput = "Buy the January 2005 $27.50 strike call for $4.38."
-
-    val underlying = parseUnderlying(underlyingInput)
-    val trades = parseTrades(tradesInput)
-
-    val context = Context(
-      name = "Custom Strategy",
-      difficulty = "Intermediate",
-      direction = "Bullish",
-      strategyType = Some(StrategyType.CapitalGain),
-      volatility = "Moderate",
-      underlying = Some(underlying)
-    )
-
-    Strategy(context, trades)
-
-@main def runParser() =
-  val strategy = StrategyParser.parse("")
-  println(strategy)
-
-object ContextParser:
-
-  // Regular expressions to extract context fields
-  private val nameRegex: Regex = raw"""name:\s*"([^"]+)"""".r
-  private val difficultyRegex: Regex = raw"""difficulty:\s*"([^"]+)"""".r
-  private val directionRegex: Regex = raw"""direction:\s*"([^"]+)"""".r
-  private val strategyTypeRegex: Regex = raw"""strategyType:\s*"([^"]+)"""".r
-  private val volatilityRegex: Regex = raw"""volatility:\s*"([^"]+)"""".r
-  
-  private val multilineUnderlyingRegex: Regex =
-    raw"""underlying:\s*\{\s*symbol:\s*"([^"]+)"\s*,?\s*price:\s*([\d.]+)\s*,?\s*date:\s*"([^"]+)"\s*\}""".r
-
-  // Helper function to extract matches
-  private def extract(regex: Regex, input: String): Option[String] =
-    regex.findFirstMatchIn(input).map(_.group(1))
-
-  def parseContext(input: String): Context =
-    val name = extract(nameRegex, input).getOrElse(throw new IllegalArgumentException("Missing context name"))
-    val difficulty = extract(difficultyRegex, input).getOrElse(throw new IllegalArgumentException("Missing context difficulty"))
-    val direction = extract(directionRegex, input).getOrElse(throw new IllegalArgumentException("Missing context direction"))
-    val strategyType = extract(strategyTypeRegex, input).getOrElse(throw new IllegalArgumentException("Missing context strategyType"))
-    val volatility = extract(volatilityRegex, input).getOrElse(throw new IllegalArgumentException("Missing context volatility"))
-
-   
-    val underlying = multilineUnderlyingRegex.findFirstMatchIn(input).map {
-      case multilineUnderlyingRegex(symbol, price, date) =>
-        println(s"Matched underlying: symbol=$symbol, price=$price, date=$date") // Debugging: Show match
-        val parsedDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        StockUnderlying(TradeType.Stock,symbol, BigDecimal(price), parsedDate)
-      case _ =>
-        throw new IllegalArgumentException("Invalid format for underlying information")
-    }
-    Context(
-      name = name,
-      difficulty = difficulty,
-      direction = direction,
-      strategyType =  StrategyType.fromString(strategyType),
-      volatility = volatility,
-      underlying = underlying
-    )
 

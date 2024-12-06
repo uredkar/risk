@@ -106,6 +106,8 @@ sealed trait Trade
 
 object Trade:
   case class OptionTrade(
+    transactionId: String,
+    transactionDate: LocalDate,
     action: PositionType,     // long or short
     optionType: OptionType, // call or put
     expiry: LocalDate,     // Expiration Date
@@ -115,10 +117,28 @@ object Trade:
     quantity: Int
   ) extends Trade
 
+  case class StockTrade(
+    transactionId: String,
+    transactionDate: LocalDate,
+    action: PositionType,     
+    price: BigDecimal,     
+    quantity: Int
+  ) extends Trade
+
+  case class ETFTrade(
+    transactionId: String,
+    transactionDate: LocalDate,
+    action: PositionType,     
+    price: BigDecimal,     
+    quantity: Int
+  ) extends Trade
+
   object OptionTrade {
 
   // Factory method with a given `currentDate`
   def apply(
+      transactionId: String,
+      transactionDate: LocalDate,
       action: PositionType,
       optionType: OptionType,
       expiry: LocalDate,
@@ -128,28 +148,26 @@ object Trade:
   )(using currentDate: LocalDate): Trade.OptionTrade = {
     val daysToExpiry = ChronoUnit.DAYS.between(currentDate, expiry)
     val timeToExpiry = BigDecimal(daysToExpiry) / 365 // Convert days to years
-    OptionTrade(action, optionType, expiry, timeToExpiry, strike, premium, quantity)
+    OptionTrade(transactionId,transactionDate,action, optionType, expiry, timeToExpiry, strike, premium, quantity)
   }
 
   // Default given instance for `currentDate`
   given LocalDate = LocalDate.now()
 }
 
-  case class StockTrade(
-    action: PositionType,     
-    price: BigDecimal,     
-    quantity: Int
-  ) extends Trade
 
-  case class ETFTrade(
-    action: PositionType,     
-    price: BigDecimal,     
-    quantity: Int
-  ) extends Trade
+
+
+case class OptionLeg(
+  legId: String,
+  trades: List[Trade]
+)
 
 case class Strategy(
+    strategyId: String,
     context: Context,
-    trades: List[Trade] = List()
+    //trades: List[Trade] = List()
+    legs: List[OptionLeg]
 ) 
 
 
@@ -169,12 +187,12 @@ case class Context(
 
 given PrettyPrinter[Strategy] with
   def prettyPrint(strategy: Strategy): String =
-    s"Printing Strategy ----------------------\n" + 
+    s"Printing Strategy ${strategy.strategyId} ----------------------\n" + 
     s"name ${strategy.context.name} difficulty ${strategy.context.difficulty} \n" +
     s"underlying ${strategy.context.underlying} outlook ${strategy.context.outlook} \n" +
     s"strategyType ${strategy.context.strategyType}\n" +
     s"maxRisk ${strategy.context.maxRisk}\n" +
-    s"trades ${strategy.trades}\n" + 
+    s"trades ${strategy.legs}\n" + 
     s"End Strategy ----------------------\n"
 
 

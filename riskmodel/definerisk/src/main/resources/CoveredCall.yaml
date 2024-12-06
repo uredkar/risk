@@ -1,3 +1,4 @@
+strategyId: "ST2"
 context:
   name: "Covered Call"
   difficulty: "Intermediate"
@@ -13,11 +14,14 @@ context:
     symbol: "NVDA"
     price: 138.12
     date: "2024-11-30"
-trades:
-  - type: "OptionTrade"
-    action: "Short"
-    optionType: "Call"
-    expiry: "2025-03-21"
-    strike: 146.0
-    premium: 12.45
-    quantity: 1
+legs:    
+  - optionLeg:
+      legId: "L1"  
+      trades:
+        - type: "OptionTrade"
+          action: "Short"
+          optionType: "Call"
+          expiry: "2025-03-21"
+          strike: 146.0
+          premium: 12.45
+          quantity: 1

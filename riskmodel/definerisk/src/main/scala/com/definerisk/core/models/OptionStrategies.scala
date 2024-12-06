@@ -21,10 +21,11 @@ def coveredCall(
   )        
    
   Strategy(
+    "id",
     context,
-    trades = List(
-      Trade.OptionTrade(PositionType.Long,OptionType.Call,expiryDate, strikePrice, premium,1)
-    )
+    legs = List(OptionLeg("id",List(
+        Trade.OptionTrade("id",LocalDate.now(),PositionType.Long,OptionType.Call,expiryDate, strikePrice, premium,1)
+      )))
   )
 
 def straddle(
@@ -43,9 +44,11 @@ def straddle(
     underlying = Some(underlying)
   )        
   Strategy(
+    "id",
     context,
-    trades = List(Trade.OptionTrade(PositionType.Long,OptionType.Call,expiryDate, strikePrice, callPremium,1),
-                Trade.OptionTrade(PositionType.Long,OptionType.Put,expiryDate, strikePrice, putPremium,1))
+    legs = List(OptionLeg("id",List(Trade.OptionTrade("id",LocalDate.now(),PositionType.Long,OptionType.Call,expiryDate, strikePrice, callPremium,1),
+                Trade.OptionTrade("id",LocalDate.now(),PositionType.Long,OptionType.Put,expiryDate, strikePrice, putPremium,1))
+    ))
   )
 
 def bullCallSpread(
@@ -64,9 +67,11 @@ def bullCallSpread(
     underlying = Some(underlying)
   )  
   Strategy(
+    "id",
     context,
-    trades = List(Trade.OptionTrade(PositionType.Long,OptionType.Call,expiryDate, lowerStrike, buyPremium,1),
-                  Trade.OptionTrade(PositionType.Short,OptionType.Put,expiryDate, higherStrike, sellPremium,1))
+    legs = List(OptionLeg("id",List(Trade.OptionTrade("id",LocalDate.now(),PositionType.Long,OptionType.Call,expiryDate, lowerStrike, buyPremium,1),
+                               Trade.OptionTrade("id",LocalDate.now(),PositionType.Short,OptionType.Put,expiryDate, higherStrike, sellPremium,1))
+    ))
   )
   
 

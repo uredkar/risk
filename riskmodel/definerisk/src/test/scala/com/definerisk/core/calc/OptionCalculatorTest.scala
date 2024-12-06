@@ -16,8 +16,8 @@ class OptionCalculatorTest extends AnyFunSuite with Matchers {
     
     val expiryDate: LocalDate = summon[LocalDate].plusMonths(3)
     val trades = List(
-      Trade.OptionTrade(PositionType.Long, OptionType.Call,expiryDate, 100, 5, 1),
-      Trade.OptionTrade(PositionType.Short,OptionType.Put,expiryDate, 90, 4, 1)
+      Trade.OptionTrade("id",LocalDate.now(),PositionType.Long, OptionType.Call,expiryDate, 100, 5, 1),
+      Trade.OptionTrade("id",LocalDate.now(),PositionType.Short,OptionType.Put,expiryDate, 90, 4, 1)
     )
     val spotPrices = (80 to 120).map(BigDecimal(_)).toList
     val volatility = 0.2
@@ -28,11 +28,12 @@ class OptionCalculatorTest extends AnyFunSuite with Matchers {
   test("Combined Option PnL") {
     val expiryDate: LocalDate = summon[LocalDate].plusMonths(3)
     val trades = List(
-    Trade.OptionTrade(PositionType.Long, OptionType.Call,expiryDate, 100, 5, 1),
-    Trade.OptionTrade(PositionType.Short,OptionType.Put,expiryDate, 90, 4, 1)
+    Trade.OptionTrade("id",LocalDate.now(),PositionType.Long, OptionType.Call,expiryDate, 100, 5, 1),
+    Trade.OptionTrade("id",LocalDate.now(),PositionType.Short,OptionType.Put,expiryDate, 90, 4, 1)
     //Trade.StockTrade(PositionType.Long, 90, 10)
     )
     val strategy = Strategy(
+        strategyId = "id",
         context = Context(
         name = "Sample Strategy",
         difficulty = "Intermediate",
@@ -40,7 +41,7 @@ class OptionCalculatorTest extends AnyFunSuite with Matchers {
         volatility = "Moderate",
         underlying = None
         ),
-        trades = trades
+        legs = List(OptionLeg("id",trades))
         )
 
     val priceRange = (80 to 120 by 5).map(BigDecimal(_)).toList
@@ -51,10 +52,11 @@ class OptionCalculatorTest extends AnyFunSuite with Matchers {
     test("Combined Greeks"){
         val expiryDate: LocalDate = summon[LocalDate].plusMonths(3)
         val trades = List(
-            Trade.OptionTrade(PositionType.Long, OptionType.Call,expiryDate, 100, 5, 1),
-            Trade.OptionTrade(PositionType.Short,OptionType.Put,expiryDate, 90, 4, 1)
+            Trade.OptionTrade("id",LocalDate.now(),PositionType.Long, OptionType.Call,expiryDate, 100, 5, 1),
+            Trade.OptionTrade("id",LocalDate.now(),PositionType.Short,OptionType.Put,expiryDate, 90, 4, 1)
         )
         val strategy = Strategy(
+            strategyId = "id",
             context = Context(
             name = "Sample Strategy",
             difficulty = "Intermediate",
@@ -62,7 +64,7 @@ class OptionCalculatorTest extends AnyFunSuite with Matchers {
             volatility = "Moderate",
             underlying = None
             ),
-            trades = trades
+            legs = List(OptionLeg("id",trades))
         )
         val priceRange = (80 to 120 by 5).map(BigDecimal(_)).toList
         CombinedGreekCalculator.generateCsvWithGreeks(
@@ -77,11 +79,11 @@ class OptionCalculatorTest extends AnyFunSuite with Matchers {
      test("Covered Call with Downside Protection for fun"){
         val expiryDate: LocalDate = summon[LocalDate].plusMonths(3)
         val trades = List(
-            Trade.StockTrade(PositionType.Long, 138,  100),
-            Trade.OptionTrade(PositionType.Short,OptionType.Call,expiryDate, 142, 14.27, 1),
-            Trade.OptionTrade(PositionType.Long,OptionType.Put,expiryDate, 130, 9.36, 1)
+            Trade.StockTrade("id",LocalDate.now(),PositionType.Long, 138,  100),
+            Trade.OptionTrade("id",LocalDate.now(),PositionType.Long,OptionType.Put,expiryDate, 130, 9.36, 1)
         )
         val strategy = Strategy(
+            strategyId = "id",
             context = Context(
             name = "Sample Strategy",
             difficulty = "Intermediate",
@@ -89,7 +91,7 @@ class OptionCalculatorTest extends AnyFunSuite with Matchers {
             volatility = "Moderate",
             underlying = None
             ),
-            trades = trades
+            legs = List(OptionLeg("id",trades))
         )
         val priceRange = (100 to 200 by 5).map(BigDecimal(_)).toList
         CombinedGreekCalculator.generateCsvWithGreeks(

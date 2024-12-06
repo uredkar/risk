@@ -1,3 +1,4 @@
+strategyId: "ST1"
 context:
   name: "Long Iron Condor"
   difficulty: "Intermediate"
@@ -13,32 +14,35 @@ context:
     symbol: "ABC"
     price: 27.50
     date: "2004-04-17"
-trades:
-  - type: "OptionTrade"
-    action: "Long"
-    optionType: "Put"
-    expiry: "2024-05-20"
-    strike: 20.0
-    premium: 0.25
-    quantity: 1
-  - type: "OptionTrade"
-    action: "Short"
-    optionType: "Put"
-    expiry: "2024-05-20"
-    strike: 25.0
-    premium: 1.25
-    quantity: 1
-  - type: "OptionTrade"
-    action: "Short"
-    optionType: "Call"
-    expiry: "2024-05-20"
-    strike: 30.0
-    premium: 1.30
-    quantity: 1
-  - type: "OptionTrade"
-    action: "Long"
-    optionType: "Call"
-    expiry: "2024-05-20"
-    strike: 35.0
-    premium: 0.35
-    quantity: 1
+legs:    
+  - optionLeg:
+      legId: "L1"    
+      trades:
+        - type: "OptionTrade"
+          action: "Long"
+          optionType: "Put"
+          expiry: "2024-05-20"
+          strike: 20.0
+          premium: 0.25
+          quantity: 1
+        - type: "OptionTrade"
+          action: "Short"
+          optionType: "Put"
+          expiry: "2024-05-20"
+          strike: 25.0
+          premium: 1.25
+          quantity: 1
+        - type: "OptionTrade"
+          action: "Short"
+          optionType: "Call"
+          expiry: "2024-05-20"
+          strike: 30.0
+          premium: 1.30
+          quantity: 1
+        - type: "OptionTrade"
+          action: "Long"
+          optionType: "Call"
+          expiry: "2024-05-20"
+          strike: 35.0
+          premium: 0.35
+          quantity: 1
