@@ -19,6 +19,8 @@ legs:
       legId: "L1"  
       trades:
         - type: "OptionTrade"
+          transactionId: "123"
+          transactionDate: "2024-12-20"
           action: "Short"
           optionType: "Call"
           expiry: "2025-03-21"

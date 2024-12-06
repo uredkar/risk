@@ -1,0 +1,7 @@
+transactionId, transactionDate, action, optionType, expiry, timeToExpiry,strike, price, quantity
+id,2024-12-06, Long, Call,  2024-12-20,100.0,5.0,1
+id,2024-12-06, Short, Call,  2024-12-20,100.0,5.0,1
+id,2024-12-06, Long,stock,,,,95.0,  100
+id,2024-12-06, Long, Call,  2024-12-20,100.0,5.0,1
+id,2024-12-06, Short, Call,  2024-12-20,100.0,5.0,1
+id,2024-12-06, Long,stock,,,,95.0,  100

@@ -19,6 +19,8 @@ legs:
       legId: "L1"
       trades:
         - type: "OptionTrade"
+          transactionId: "123"
+          transactionDate: "2024-12-20"
           action: "Long"
           optionType: "Call"
           expiry: "2024-06-20"
@@ -26,6 +28,8 @@ legs:
           premium: 6.12
           quantity: 1
         - type: "OptionTrade"
+          transactionId: "123"
+          transactionDate: "2024-12-20"
           action: "Short"
           optionType: "Call"
           expiry: "2024-12-20"
@@ -33,6 +37,8 @@ legs:
           premium: 3.07
           quantity: 2
         - type: "OptionTrade"
+          transactionId: "123"
+          transactionDate: "2024-12-20"
           action: "Long"
           optionType: "Call"
           expiry: "2024-12-20"

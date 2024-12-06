@@ -102,6 +102,8 @@ given Decoder[Trade] = Decoder.instance { cursor =>
   cursor.downField("type").as[String].flatMap {
     case "OptionTrade" =>
       for
+        transactionId     <- cursor.downField("transactionId").as[String]
+        transactionDate     <- cursor.downField("transactionDate").as[LocalDate]
         action     <- cursor.downField("action").as[PositionType]
         optionType <- cursor.downField("optionType").as[OptionType]
         expiry     <- cursor.downField("expiry").as[LocalDate]
@@ -112,6 +114,8 @@ given Decoder[Trade] = Decoder.instance { cursor =>
 
     case "StockTrade" =>
       for
+        transactionId     <- cursor.downField("transactionId").as[String]
+        transactionDate     <- cursor.downField("transactionDate").as[LocalDate]
         action   <- cursor.downField("action").as[PositionType]
         price    <- cursor.downField("price").as[Double]
         quantity <- cursor.downField("quantity").as[Int]

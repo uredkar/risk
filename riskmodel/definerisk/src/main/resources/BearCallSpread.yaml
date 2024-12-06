@@ -20,6 +20,8 @@ legs:
       legId: "L1"
       trades:
         - type: "OptionTrade"
+          transactionId: "123"
+          transactionDate: "2024-12-20"
           action: "Long"
           optionType: "Call"
           expiry: "2024-12-20"
@@ -27,6 +29,8 @@ legs:
           premium: 5.0
           quantity: 1
         - type: "OptionTrade"
+          transactionId: "123"
+          transactionDate: "2024-12-20"
           action: "Short"
           optionType: "Call"
           expiry: "2024-12-20"
@@ -34,6 +38,8 @@ legs:
           premium: 5.0
           quantity: 1
         - type: "StockTrade"
+          transactionId: "123"
+          transactionDate: "2024-12-20"
           action: "Long"
           price: 95.0
           quantity: 100
@@ -42,6 +48,8 @@ legs:
       legId: "L2"
       trades:
         - type: "OptionTrade"
+          transactionId: "123"
+          transactionDate: "2024-12-20"
           action: "Long"
           optionType: "Call"
           expiry: "2024-12-20"
@@ -49,6 +57,8 @@ legs:
           premium: 5.0
           quantity: 1
         - type: "OptionTrade"
+          transactionId: "123"
+          transactionDate: "2024-12-20"
           action: "Short"
           optionType: "Call"
           expiry: "2024-12-20"
@@ -56,6 +66,8 @@ legs:
           premium: 5.0
           quantity: 1
         - type: "StockTrade"
+          transactionId: "123"
+          transactionDate: "2024-12-20"
           action: "Long"
           price: 95.0
           quantity: 100

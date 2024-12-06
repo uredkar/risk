@@ -2,6 +2,8 @@ import com.definerisk.core.models.*
 import cats.data.Validated
 import cats.Functor
 import cats.implicits._
+import com.definerisk.core.dsl.{*,given}
+import java.io.PrintWriter
 
 trait MyContainer[F[_]] {
     def get[A](fa: F[A]): A
@@ -126,17 +128,40 @@ class SafeContainer[F[_]](val data: F[Option[Int]])(using functor: Functor[F]) {
   }
 }
 
-object TestStrategies:
-    def unnestTrades(strategies: List[Strategy]): List[OptionT[List, Trade]] =
-        strategies.flatMap { strategy =>
-            strategy.legs.flatMap { leg =>
-                leg.trades.map { trade =>
-                    OptionT(List(Some(trade))) // Wrap each trade in OptionT
-                }
-            }
-        }
+  
     
-   
+    
+
+@main def reportTrades(): Unit =
+    val directory = "./src/main/resources/" // Replace with your directory
+    val yamlContents = YamlReader.readYamlFiles(directory)
+    val writer = new PrintWriter("flat_report.csv")
+    writer.println("transactionId, transactionDate, action, optionType, expiry, timeToExpiry,strike, price, quantity")
+    yamlContents.foreach { case (file, content) =>
+        println(s"File: $file")
+        
+        val ctx = DSLProcessor.parse(content) match 
+                case Right(strategy) =>  {
+                    val flattenedAndSortedTrades = strategy.legs
+                      .flatMap(leg => leg.trades)           // Flatten the nested list of trades
+                     .sortBy {
+                          case Trade.OptionTrade(transactionId, transactionDate, action, optionType, expiry, timeToExpiry,strike, premium, quantity) => transactionDate
+                          case Trade.StockTrade(_, transactionDate, _, _, _) => transactionDate
+                      } // Sort trades by transaction date
+
+                    flattenedAndSortedTrades.foreach {
+                      case Trade.OptionTrade(transactionId, transactionDate, action, optionType, expiry, timeToExpiry,strike, premium, quantity) =>
+                       writer.println(s"$transactionId,$transactionDate, $action, $optionType,  $expiry,$strike,$premium,$quantity")
+                      case Trade.StockTrade(transactionId, transactionDate, action, price, quantity) =>
+                        writer.println(s"$transactionId,$transactionDate, $action,stock,,,,$price,  $quantity")
+                    }
+                }
+                case Left(error) => "Error"
+        writer.close()                
+        println(ctx)   
+    }
+    
+
 def test_optionT() = 
     import scala.concurrent.{Future, ExecutionContext}
     import scala.concurrent.ExecutionContext.Implicits.global
@@ -211,6 +236,9 @@ def test_typed_lambda() =
     val extractedContainer: List[Int] = listSafeContainer.extractOrElse(0)
     println("extracted Container")
     println(extractedContainer) // Output: List(1, 0, 2)
+
+
+
 
 @main def testMonads() =     
     println("\nFirst element -------")
