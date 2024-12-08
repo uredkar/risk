@@ -1,0 +1,23 @@
+accounts:
+- name: Account1
+  brokerName: BrokerA
+  securities:
+  - type: ETF
+    symbol: SPY
+    quantity: 20
+    currentPrice: 400.0
+  - type: StockOption
+    symbol: TSLA
+    premium: 5.0
+    quantity: 10
+    optionType: Call
+    expiryDate: '2024-06-30'
+    strikePrice: 750.0
+    currentPrice: 50.0
+- name: Account2
+  brokerName: BrokerB
+  securities:
+  - type: Stock
+    symbol: AAPL
+    quantity: 100
+    currentPrice: 150.0

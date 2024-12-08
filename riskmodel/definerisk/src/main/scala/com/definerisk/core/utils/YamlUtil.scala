@@ -20,9 +20,19 @@ import com.definerisk.core.models.{*,given}
 object YamlUtil:
   private val yamlPrinter = Printer.spaces2
 
-  
 
   // Encoders and Decoders for Security Subtypes
+  given Encoder[OptionType] =  Encoder.instance {
+    case _ : OptionType.Call.type => "Call".asJson
+    case _ : OptionType.Put.type  => "Put".asJson
+  }
+  given Decoder[OptionType] = Decoder.decodeString.emap {
+    case "Call" => Right(OptionType.Call)
+    case "Put"  => Right(OptionType.Put)
+    case other  => Left(s"Invalid OptionType: $other")
+    }
+  //given Decoder[OptionType] = deriveDecoder[OptionType]
+
   given Encoder[Stock] = deriveEncoder[Stock]
   given Decoder[Stock] = deriveDecoder[Stock]
 
@@ -75,3 +85,37 @@ object YamlUtil:
   def loadPortfolio(file: File): Either[io.circe.Error, Portfolio] =
     val yamlContent = Source.fromFile(file).mkString
     parser.parse(yamlContent).flatMap(_.as[Portfolio])
+
+@main def demoYamlUtil() =
+
+  val portfolio = Portfolio(
+    accounts = List(
+      Account(
+        "Account1",
+        "BrokerA",
+        List(
+          Stock("AAPL", 100, 150.0),
+          Bond("GOVT", 50, 1000.0, 3.5, 1000.0, LocalDate.of(2030, 12, 31))
+        )
+      ),
+      Account(
+        "Account2",
+        "BrokerB",
+        List(
+          ETF("SPY", 20, 400.0),
+          StockOption("TSLA", 10, 50.0, OptionType.Call, 750.0, 5.0, LocalDate.of(2024, 6, 30))
+        )
+      )
+    )
+  )
+
+  val file = new File("portfolio.yaml")
+
+  // Save Portfolio
+  YamlUtil.savePortfolio(portfolio, file)
+
+  // Load Portfolio
+  YamlUtil.loadPortfolio(file) match {
+    case Right(loadedPortfolio) => println(s"Portfolio loaded: $loadedPortfolio")
+    case Left(error)            => println(s"Failed to load portfolio: $error")
+  }

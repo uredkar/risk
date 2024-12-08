@@ -156,31 +156,6 @@ type TradeFree[A] = Free[TradeOp, A]
 
 
 
-def createTrade(trade: Trade): Free[TradeOp, Unit] =
-  Free.liftF(TradeOp.CreateTrade(trade))
-
-def modifyTrade(id: String, updatedTrade: Trade): Free[TradeOp, Unit] =
-  Free.liftF(TradeOp.ModifyTrade(id, updatedTrade))
-
-def executeTrade(trade: Trade): Free[TradeOp, Unit] =
-  Free.liftF(TradeOp.ExecuteTrade(trade))
-
-def cancelTrade(id: String): Free[TradeOp, Unit] =
-  Free.liftF(TradeOp.CancelTrade(id))
-
-def logTrade(message: String): Free[TradeOp, Unit] =
-  Free.liftF(TradeOp.LogTrade(message))
-
-// Example Program
-val program: Free[TradeOp, Unit] = for {
-  _ <- logTrade("Starting trade operations")
-  _ <- createTrade(Trade.StockTrade("T1", LocalDate.now, PositionType.Long, BigDecimal(150), 100))
-  _ <- executeTrade(Trade.StockTrade("T1", LocalDate.now, PositionType.Long, BigDecimal(150), 100))
-  _ <- logTrade("Trade operations completed")
-} yield ()
-
-
-
 sealed trait PortfolioOp[A]
 object PortfolioOp:
   case class CreateAccount(account: Account) extends PortfolioOp[Unit]
@@ -231,12 +206,16 @@ class PortfolioInterpreter:
     case PortfolioOp.CreateAccount(account) =>
       portfolio = portfolio.copy(accounts = portfolio.accounts :+ account)
       println(s"Account '${account.name}' created.")
+      portfolioData.put(account.name,account)
       ().asInstanceOf[A]
     
     case PortfolioOp.AddSecurity(accountName, security) =>
+      
       portfolio = portfolio.copy(accounts = portfolio.accounts.map { account =>
-        if (account.name == accountName)
+        if (account.name == accountName) {
+          println(s"AddSecurity2 $accountName $security")
           account.copy(securities = account.securities :+ security)
+        }
         else account
       })
       println(s"Security '${security}' added to account '$accountName'.")
@@ -276,25 +255,28 @@ class PortfolioInterpreter:
       portfolioData.get(accountName) match {
         case Some(account) =>
           val updatedSecurities = trade match {
-            case Trade.StockTrade(_, _, action, price, quantity) =>
+            case Trade.StockTrade(_, _,symbol, action, price, quantity) =>
               val delta = if action == PositionType.Long then quantity else -quantity
-              updateSecurity(account, Stock("AAPL", delta, price)) // Replace "AAPL" with trade's symbol
+              updateSecurity(account, Stock(symbol, delta, price)) // Replace "AAPL" with trade's symbol
             
-            case Trade.OptionTrade(_, _, action, optionType, expiry, _, strike, premium,quantity) =>
+            case Trade.OptionTrade(_, _, symbol,action, optionType, expiry, _, strike, premium,quantity) =>
               val delta = if action == PositionType.Long then quantity else -quantity
-              updateSecurity(account, StockOption("AAPL",delta,premium, optionType, strike, premium,expiry)) // fix premium vs current price tbd
-            case Trade.ETFTrade(_, _, action, price, quantity) =>
+              updateSecurity(account, StockOption(symbol,delta,premium, optionType, strike, premium,expiry)) // fix premium vs current price tbd
+            case Trade.ETFTrade(_, _,symbol, action, price, quantity) =>
               val delta = if action == PositionType.Long then quantity else -quantity
-              updateSecurity(account, ETF("SPY", delta, price)) // Replace "SPY" with trade's symbol
+              updateSecurity(account, ETF(symbol, delta, price)) // Replace "SPY" with trade's symbol
             
             case _ => account.securities // For unsupported trade types, leave securities as-is
           }
           portfolioData(accountName) = account.copy(securities = updatedSecurities)
 
-        case None => println(s"Account $accountName not found!")
+        case None => println(s"ExecuteTrade Account $accountName not found!")
       }
 
-    //case _ => println("not handled")
+    case _ => {
+      println("interpret not handled") 
+      throw new NoSuchElementException("empty list")
+    }
   }
 
   private def updateSecurity(account: Account, newSecurity: Security): List[Security] = {
@@ -332,43 +314,23 @@ class PortfolioInterpreter:
 
 
 
-// DSL
-def createAccount(account: Account): Free[PortfolioOp, Unit] =
-  Free.liftF(PortfolioOp.CreateAccount(account))
-
-def addSecurity(accountName: String, security: Security): Free[PortfolioOp, Unit] =
-  Free.liftF(PortfolioOp.AddSecurity(accountName, security))
-
-def removeSecurity(accountName: String, symbol: String): Free[PortfolioOp, Unit] =
-  Free.liftF(PortfolioOp.RemoveSecurity(accountName, symbol))
-
-def modifySecurity(accountName: String, symbol: String, updatedSecurity: Security): Free[PortfolioOp, Unit] =
-  Free.liftF(PortfolioOp.ModifySecurity(accountName, symbol, updatedSecurity))
-
-def summarizeByAccount(accountName: String): Free[PortfolioOp, String] =
-  Free.liftF(PortfolioOp.SummarizeByAccount(accountName))
-
-def summarizePortfolio(): Free[PortfolioOp, String] =
-  Free.liftF(PortfolioOp.SummarizePortfolio())
-
-def savePortfolio(filePath: String): Free[PortfolioOp, Unit] =
-  Free.liftF(PortfolioOp.SavePortfolio(filePath))
-
-def loadPortfolio(filePath: String): Free[PortfolioOp, Portfolio] =
-  Free.liftF(PortfolioOp.LoadPortfolio(filePath))
-
 @main def freeMonadPortfolio(): Unit = 
-  val account1 = Account(name = "RetirementFund", brokerName = "BrokerA", securities = List.empty)
-  val account2 = Account(name = "TradingAccount", brokerName = "BrokerB", securities = List.empty)
+  val account1 = Account(name = "Account1", brokerName = "BrokerA", securities = List.empty)
+  val account2 = Account(name = "Account2", brokerName = "BrokerB", securities = List.empty)
 
   
   val createAccountOp = PortfolioOp.CreateAccount(account1)
+  println("AddSecurity.........................")
+  val securityOp1 = PortfolioOp.AddSecurity(account1.name, ETF("SPY", 20, 400.0))
+  val securityOp2 = PortfolioOp.AddSecurity(account1.name, StockOption("TSLA", 10, 50.0, OptionType.Call, 750.0, 5.0, LocalDate.of(2024, 6, 30)))
+  val securityOp3 = PortfolioOp.AddSecurity(account2.name, Stock("AAPL", 100, 150.0))
   val createAnotherAccountOp = PortfolioOp.CreateAccount(account2)
 
   // Execute trades for stocks, options, and ETFs
   val stockTrade = Trade.StockTrade(
     transactionId = "ST123",
     transactionDate = LocalDate.now(),
+    symbol = "APPL",
     action = PositionType.Long,
     price = BigDecimal(200.0),
     quantity = 50
@@ -377,6 +339,7 @@ def loadPortfolio(filePath: String): Free[PortfolioOp, Portfolio] =
   val optionTrade = Trade.OptionTrade(
     transactionId = "OT123",
     transactionDate = LocalDate.now(),
+    symbol = "APPL000000",
     action = PositionType.Short,
     optionType = OptionType.Call,
     expiry = LocalDate.now().plusMonths(1),
@@ -386,25 +349,35 @@ def loadPortfolio(filePath: String): Free[PortfolioOp, Portfolio] =
     quantity = 10
   )
 
-  val executeStockTradeOp = PortfolioOp.ExecuteTrade("Account1", stockTrade)
-  val executeOptionTradeOp = PortfolioOp.ExecuteTrade("Account2", optionTrade)
+  
+  val executeOptionTradeOp = PortfolioOp.ExecuteTrade("Account1", optionTrade)
+  val executeStockTradeOp = PortfolioOp.ExecuteTrade("Account2", stockTrade)
+  
 
   // Save and load portfolio
-  val savePortfolioOp = PortfolioOp.SavePortfolio("portfolio.yaml")
-  val loadPortfolioOp = PortfolioOp.LoadPortfolio("portfolio.yaml")
+  
+  
 
   // Usage with PortfolioInterpreter
   val portfolioInterpreter = new PortfolioInterpreter()
 
   portfolioInterpreter.interpret(createAccountOp)
   portfolioInterpreter.interpret(createAnotherAccountOp)
+  portfolioInterpreter.interpret(securityOp1)
+  portfolioInterpreter.interpret(securityOp2)
+  portfolioInterpreter.interpret(securityOp3)
   portfolioInterpreter.interpret(executeStockTradeOp)
   portfolioInterpreter.interpret(executeOptionTradeOp)
-  portfolioInterpreter.interpret(savePortfolioOp)
-  portfolioInterpreter.interpret(loadPortfolioOp)
+  
+  
   val summary = portfolioInterpreter.interpret(PortfolioOp.GetPortfolioSummary())
   println(summary)
-
+  val savePortfolioOp = PortfolioOp.SavePortfolio("portfolio2.yaml")
+  portfolioInterpreter.interpret(savePortfolioOp)
+  val loadPortfolioOp = PortfolioOp.LoadPortfolio("portfolio2.yaml")
+  println("--------- reading portfolio from yaml.....")
+  portfolioInterpreter.interpret(loadPortfolioOp)
+  println("--------- ")
 
 @main def reportTrades(): Unit =
     val directory = "./src/main/resources/" // Replace with your directory
@@ -419,14 +392,14 @@ def loadPortfolio(filePath: String): Free[PortfolioOp, Portfolio] =
                     val flattenedAndSortedTrades = strategy.legs
                       .flatMap(leg => leg.trades)           // Flatten the nested list of trades
                      .sortBy {
-                          case Trade.OptionTrade(transactionId, transactionDate, action, optionType, expiry, timeToExpiry,strike, premium, quantity) => transactionDate
-                          case Trade.StockTrade(_, transactionDate, _, _, _) => transactionDate
+                          case Trade.OptionTrade(transactionId, transactionDate, symbol,action, optionType, expiry, timeToExpiry,strike, premium, quantity) => transactionDate
+                          case Trade.StockTrade(_,transactionDate,symbol, _, _, _) => transactionDate
                       } // Sort trades by transaction date
 
                     flattenedAndSortedTrades.foreach {
-                      case Trade.OptionTrade(transactionId, transactionDate, action, optionType, expiry, timeToExpiry,strike, premium, quantity) =>
+                      case Trade.OptionTrade(transactionId, transactionDate, symtbol, action, optionType, expiry, timeToExpiry,strike, premium, quantity) =>
                        writer.println(s"$transactionId,$transactionDate, $action, $optionType,  $expiry,$strike,$premium,$quantity")
-                      case Trade.StockTrade(transactionId, transactionDate, action, price, quantity) =>
+                      case Trade.StockTrade(transactionId, transactionDate, symbol,action, price, quantity) =>
                         writer.println(s"$transactionId,$transactionDate, $action,stock,,,,$price,  $quantity")
                     }
                 }

@@ -16,8 +16,8 @@ class OptionCalculatorTest extends AnyFunSuite with Matchers {
     
     val expiryDate: LocalDate = summon[LocalDate].plusMonths(3)
     val trades = List(
-      Trade.OptionTrade("id",LocalDate.now(),PositionType.Long, OptionType.Call,expiryDate, 100, 5, 1),
-      Trade.OptionTrade("id",LocalDate.now(),PositionType.Short,OptionType.Put,expiryDate, 90, 4, 1)
+      Trade.OptionTrade("id",LocalDate.now(),"AAPL000",PositionType.Long, OptionType.Call,expiryDate, 100, 5, 1),
+      Trade.OptionTrade("id",LocalDate.now(),"AAPL000",PositionType.Short,OptionType.Put,expiryDate, 90, 4, 1)
     )
     val spotPrices = (80 to 120).map(BigDecimal(_)).toList
     val volatility = 0.2
@@ -28,8 +28,8 @@ class OptionCalculatorTest extends AnyFunSuite with Matchers {
   test("Combined Option PnL") {
     val expiryDate: LocalDate = summon[LocalDate].plusMonths(3)
     val trades = List(
-    Trade.OptionTrade("id",LocalDate.now(),PositionType.Long, OptionType.Call,expiryDate, 100, 5, 1),
-    Trade.OptionTrade("id",LocalDate.now(),PositionType.Short,OptionType.Put,expiryDate, 90, 4, 1)
+    Trade.OptionTrade("id",LocalDate.now(),"AAPL000",PositionType.Long, OptionType.Call,expiryDate, 100, 5, 1),
+    Trade.OptionTrade("id",LocalDate.now(),"AAPL000",PositionType.Short,OptionType.Put,expiryDate, 90, 4, 1)
     //Trade.StockTrade(PositionType.Long, 90, 10)
     )
     val strategy = Strategy(
@@ -52,8 +52,8 @@ class OptionCalculatorTest extends AnyFunSuite with Matchers {
     test("Combined Greeks"){
         val expiryDate: LocalDate = summon[LocalDate].plusMonths(3)
         val trades = List(
-            Trade.OptionTrade("id",LocalDate.now(),PositionType.Long, OptionType.Call,expiryDate, 100, 5, 1),
-            Trade.OptionTrade("id",LocalDate.now(),PositionType.Short,OptionType.Put,expiryDate, 90, 4, 1)
+            Trade.OptionTrade("id",LocalDate.now(),"AAPL000",PositionType.Long, OptionType.Call,expiryDate, 100, 5, 1),
+            Trade.OptionTrade("id",LocalDate.now(),"AAPL000",PositionType.Short,OptionType.Put,expiryDate, 90, 4, 1)
         )
         val strategy = Strategy(
             strategyId = "id",
@@ -79,8 +79,8 @@ class OptionCalculatorTest extends AnyFunSuite with Matchers {
      test("Covered Call with Downside Protection for fun"){
         val expiryDate: LocalDate = summon[LocalDate].plusMonths(3)
         val trades = List(
-            Trade.StockTrade("id",LocalDate.now(),PositionType.Long, 138,  100),
-            Trade.OptionTrade("id",LocalDate.now(),PositionType.Long,OptionType.Put,expiryDate, 130, 9.36, 1)
+            Trade.StockTrade("id",LocalDate.now(),"AAPL",PositionType.Long, 138,  100),
+            Trade.OptionTrade("id",LocalDate.now(),"AAPL000",PositionType.Long,OptionType.Put,expiryDate, 130, 9.36, 1)
         )
         val strategy = Strategy(
             strategyId = "id",

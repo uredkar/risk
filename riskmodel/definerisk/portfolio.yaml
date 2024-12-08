@@ -1,7 +1,30 @@
 accounts:
-- name: RetirementFund
+- name: Account1
   brokerName: BrokerA
-  securities: []
-- name: TradingAccount
+  securities:
+  - type: Stock
+    symbol: AAPL
+    quantity: 100
+    currentPrice: 150.0
+  - quantity: 50
+    yieldPercentage: 3.5
+    symbol: GOVT
+    maturityDate: '2030-12-31'
+    currentPrice: 1000.0
+    parValue: 1000.0
+    type: Bond
+- name: Account2
   brokerName: BrokerB
-  securities: []
+  securities:
+  - type: ETF
+    symbol: SPY
+    quantity: 20
+    currentPrice: 400.0
+  - currentPrice: 50.0
+    type: StockOption
+    premium: 5.0
+    expiryDate: '2024-06-30'
+    strikePrice: 750.0
+    optionType: Call
+    quantity: 10
+    symbol: TSLA

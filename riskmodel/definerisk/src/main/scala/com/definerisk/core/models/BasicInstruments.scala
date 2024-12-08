@@ -108,6 +108,7 @@ object Trade:
   case class OptionTrade(
     transactionId: String,
     transactionDate: LocalDate,
+    symbol: String,
     action: PositionType,     // long or short
     optionType: OptionType, // call or put
     expiry: LocalDate,     // Expiration Date
@@ -120,6 +121,7 @@ object Trade:
   case class StockTrade(
     transactionId: String,
     transactionDate: LocalDate,
+    symbol: String,
     action: PositionType,     
     price: BigDecimal,     
     quantity: Int
@@ -128,6 +130,7 @@ object Trade:
   case class ETFTrade(
     transactionId: String,
     transactionDate: LocalDate,
+    symbol: String,
     action: PositionType,     
     price: BigDecimal,     
     quantity: Int
@@ -139,6 +142,7 @@ object Trade:
   def apply(
       transactionId: String,
       transactionDate: LocalDate,
+      symbol: String,
       action: PositionType,
       optionType: OptionType,
       expiry: LocalDate,
@@ -148,7 +152,7 @@ object Trade:
   )(using currentDate: LocalDate): Trade.OptionTrade = {
     val daysToExpiry = ChronoUnit.DAYS.between(currentDate, expiry)
     val timeToExpiry = BigDecimal(daysToExpiry) / 365 // Convert days to years
-    OptionTrade(transactionId,transactionDate,action, optionType, expiry, timeToExpiry, strike, premium, quantity)
+    OptionTrade(transactionId,transactionDate,symbol,action, optionType, expiry, timeToExpiry, strike, premium, quantity)
   }
 
   // Default given instance for `currentDate`

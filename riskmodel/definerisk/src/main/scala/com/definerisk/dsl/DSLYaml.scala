@@ -104,22 +104,24 @@ given Decoder[Trade] = Decoder.instance { cursor =>
       for
         transactionId     <- cursor.downField("transactionId").as[String]
         transactionDate     <- cursor.downField("transactionDate").as[LocalDate]
+        symbol  <- cursor.downField("symbol").as[String]
         action     <- cursor.downField("action").as[PositionType]
         optionType <- cursor.downField("optionType").as[OptionType]
         expiry     <- cursor.downField("expiry").as[LocalDate]
         strike     <- cursor.downField("strike").as[BigDecimal]
         premium    <- cursor.downField("premium").as[BigDecimal]
         quantity   <- cursor.downField("quantity").as[Int]
-      yield Trade.OptionTrade("id",LocalDate.now(),action, optionType, expiry, strike, premium,quantity)
+      yield Trade.OptionTrade("id",LocalDate.now(),symbol,action, optionType, expiry, strike, premium,quantity)
 
     case "StockTrade" =>
       for
         transactionId     <- cursor.downField("transactionId").as[String]
         transactionDate     <- cursor.downField("transactionDate").as[LocalDate]
+        symbol  <- cursor.downField("symbol").as[String]
         action   <- cursor.downField("action").as[PositionType]
         price    <- cursor.downField("price").as[Double]
         quantity <- cursor.downField("quantity").as[Int]
-      yield Trade.StockTrade("id",LocalDate.now(),action, price, quantity)
+      yield Trade.StockTrade("id",LocalDate.now(),symbol,action, price, quantity)
 
     case other =>
       Left(DecodingFailure(s"Unknown trade type: $other", cursor.history))

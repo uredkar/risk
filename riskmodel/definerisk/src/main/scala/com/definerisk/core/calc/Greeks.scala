@@ -19,15 +19,15 @@ extension (s: Strategy)
     spotPrices.map { S =>
       val sums = s.legs.map { l =>
         l.trades.map {
-          case Trade.OptionTrade(_,_,PositionType.Long,OptionType.Call,_,_,strike, premium,_) =>
+          case Trade.OptionTrade(_,_,symbol,PositionType.Long,OptionType.Call,_,_,strike, premium,_) =>
             BigDecimal(Math.max(S.toDouble - strike.toDouble, 0)) - premium
-          case Trade.OptionTrade(_,_, PositionType.Short,OptionType.Call,_,_,strike, premium,_) =>
+          case Trade.OptionTrade(_,_,symbol, PositionType.Short,OptionType.Call,_,_,strike, premium,_) =>
             (premium - BigDecimal(Math.max(S.toDouble - strike.toDouble, 0)))
-          case Trade.OptionTrade(_,_, PositionType.Long,OptionType.Put,_,_,strike, premium,_) =>
+          case Trade.OptionTrade(_,_,symbol, PositionType.Long,OptionType.Put,_,_,strike, premium,_) =>
             BigDecimal(Math.max(strike.toDouble - S.toDouble, 0)) - premium
-          case Trade.OptionTrade(_,_, PositionType.Short,OptionType.Put,_,_,strike, premium,_) =>
+          case Trade.OptionTrade(_,_,symbol, PositionType.Short,OptionType.Put,_,_,strike, premium,_) =>
             premium - BigDecimal(Math.max(strike.toDouble - S.toDouble, 0))
-          case Trade.StockTrade(_,_,action,price, quantity) =>  BigDecimal(-quantity) * price
+          case Trade.StockTrade(_,_,symbol,action,price, quantity) =>  BigDecimal(-quantity) * price
         //case _ => 0 //println("calculate pnl map case not found")
         }.sum
       }
@@ -47,7 +47,7 @@ extension (s: Strategy)
   s.legs.map {
     l =>
       l.trades.map {
-      case Trade.OptionTrade(_,_,PositionType.Long, optionType, _,_,strike, _, _) =>
+      case Trade.OptionTrade(_,_,symbol,PositionType.Long, optionType, _,_,strike, _, _) =>
         GreeksCalculator.calculate(
           optionType,
           spotPrice,
@@ -56,7 +56,7 @@ extension (s: Strategy)
           r,
           sigma
         )
-      case Trade.OptionTrade(_,_,PositionType.Short, optionType, _,_, strike, _, _) =>
+      case Trade.OptionTrade(_,_,symbol,PositionType.Short, optionType, _,_, strike, _, _) =>
       // Negate Greeks for short positions
       val g = GreeksCalculator.calculate(
         optionType,
@@ -72,7 +72,7 @@ extension (s: Strategy)
         vega = -g.vega,
         rho = -g.rho
       )
-    case Trade.StockTrade(_,_,action, price, quantity) =>
+    case Trade.StockTrade(_,_,symbol,action, price, quantity) =>
       // Delta is ±quantity, others are 0
       val delta = action match
         case PositionType.Long  => BigDecimal(quantity)
@@ -169,8 +169,8 @@ object Strategies:
         "id",
         context,
         List(OptionLeg("id",List(
-                  Trade.OptionTrade("id",LocalDate.now(),PositionType.Long,OptionType.Call,expiryDate, strike, premium,1),
-                  Trade.OptionTrade("id",LocalDate.now(),PositionType.Long,OptionType.Put,expiryDate, strike, premium,1)
+                  Trade.OptionTrade("id",LocalDate.now(),"AAPL0000",PositionType.Long,OptionType.Call,expiryDate, strike, premium,1),
+                  Trade.OptionTrade("id",LocalDate.now(),"AAPL0000",PositionType.Long,OptionType.Put,expiryDate, strike, premium,1)
                 )
         ))
       )
@@ -180,8 +180,8 @@ object Strategies:
         "id",
         context,
         List(OptionLeg("id",List(
-          Trade.OptionTrade("id",LocalDate.now(),PositionType.Long, OptionType.Call,expiryDate, callStrike, premium,1),
-          Trade.OptionTrade("id",LocalDate.now(),PositionType.Long,OptionType.Put, expiryDate, putStrike, premium,1)
+          Trade.OptionTrade("id",LocalDate.now(),"AAPL0000",PositionType.Long, OptionType.Call,expiryDate, callStrike, premium,1),
+          Trade.OptionTrade("id",LocalDate.now(),"AAPL0000",PositionType.Long,OptionType.Put, expiryDate, putStrike, premium,1)
         )))
       )
 
@@ -206,7 +206,7 @@ object CombinedGreekCalculator {
       riskFreeRate: BigDecimal
   ): Greeks = {
     trade match {
-      case Trade.OptionTrade(_,_,action, optionType, expiry, _, strike, premium, quantity) =>
+      case Trade.OptionTrade(_,_,symbol,action, optionType, expiry, _, strike, premium, quantity) =>
         // Black-Scholes Greeks for options
         val d1 = (Math.log((underlyingPrice / strike).toDouble) +
           ((riskFreeRate + (volatility * volatility) / 2) * timeToExpiry.toDouble)) /
