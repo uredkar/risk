@@ -1,6 +1,6 @@
 package com.definerisk.core.dsl
 
-
+import com.definerisk.core.models.{*,given}
 
 
 import java.nio.file.{Files, Path, Paths}

@@ -171,7 +171,24 @@ case class Strategy(
 ) 
 
 
+case class Account(
+    name: String,
+    brokerName: String,
+    securities: List[Security]
+)
 
+case class Portfolio(accounts: List[Account])
+sealed trait Security:
+  def symbol: String
+  def quantity: Int
+  def currentPrice: BigDecimal
+  def calculateValue: BigDecimal = quantity * currentPrice
+
+case class Stock(symbol: String, quantity: Int, currentPrice: BigDecimal) extends Security
+case class Bond(symbol: String, quantity: Int, currentPrice: BigDecimal,yieldPercentage: BigDecimal, parValue: BigDecimal, maturityDate: LocalDate) extends Security
+case class ETF(symbol: String, quantity: Int, currentPrice: BigDecimal) extends Security
+case class StockOption(symbol: String, quantity: Int, currentPrice: BigDecimal,optionType: OptionType, strikePrice: BigDecimal, premium: BigDecimal, expiryDate: LocalDate) extends Security
+  
 case class Context(
   name: String,
   difficulty: String,
@@ -184,6 +201,15 @@ case class Context(
   volatility: String,
   underlying: Option[Underlying]
 )
+
+
+trait MyContainer[F[_]] {
+    def get[A](fa: F[A]): A
+}
+
+given listContainer: MyContainer[List] with {
+    def get[A](fa: List[A]): A = fa.head
+}
 
 given PrettyPrinter[Strategy] with
   def prettyPrint(strategy: Strategy): String =

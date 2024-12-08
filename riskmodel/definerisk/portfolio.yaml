@@ -1,0 +1,7 @@
+accounts:
+- name: RetirementFund
+  brokerName: BrokerA
+  securities: []
+- name: TradingAccount
+  brokerName: BrokerB
+  securities: []

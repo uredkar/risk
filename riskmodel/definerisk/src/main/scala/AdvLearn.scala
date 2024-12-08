@@ -1,17 +1,18 @@
-import com.definerisk.core.models.*
+import com.definerisk.core.models.{*,given}
+import com.definerisk.core.utils.YamlUtil.{*,given}
 import cats.data.Validated
 import cats.Functor
 import cats.implicits._
 import com.definerisk.core.dsl.{*,given}
 import java.io.PrintWriter
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
-trait MyContainer[F[_]] {
-    def get[A](fa: F[A]): A
-}
 
-given listContainer: MyContainer[List] with {
-    def get[A](fa: List[A]): A = fa.head
-}
+import java.time.LocalDate
+import scala.collection.mutable
+
+import java.io.{File, FileWriter, PrintWriter}
 
 def firstElement[F[_], A](container: F[A])(using MyContainer[F]): A = 
     summon[MyContainer[F]].get(container)
@@ -65,8 +66,7 @@ given Functor[Option] with
 given Functor[List] with
   def map[A, B](fa: List[A])(f: A => B): List[B] = fa.map(f)
 
-  
-//type Flatten[F[_]] = [A] =>> F[Option[A]]
+ 
 type Flatten[F[_]] = [A, B] =>> F[Option[A]] => F[Option[B]]
 
 
@@ -128,9 +128,283 @@ class SafeContainer[F[_]](val data: F[Option[Int]])(using functor: Functor[F]) {
   }
 }
 
+
+sealed trait TradeOp[A]
+
+object TradeOp:
+  case class CreateTrade(trade: Trade) extends TradeOp[Unit]
+  case class ModifyTrade(id: String, updatedTrade: Trade) extends TradeOp[Unit]
+  case class ExecuteTrade(trade: Trade) extends TradeOp[Unit]
+  case class CancelTrade(id: String) extends TradeOp[Unit]
+  case class LogTrade(message: String) extends TradeOp[Unit]
+
+
+
+sealed trait Free[F[_], A]:
+  def flatMap[B](f: A => Free[F, B]): Free[F, B] = Free.FlatMap(this, f)
+  def map[B](f: A => B): Free[F, B] = flatMap(a => Free.Pure(f(a)))
+
+object Free:
+  case class Pure[F[_], A](value: A) extends Free[F, A]
+  case class Suspend[F[_], A](effect: F[A]) extends Free[F, A]
+  case class FlatMap[F[_], A, B](sub: Free[F, A], f: A => Free[F, B]) extends Free[F, B]
+
+  def pure[F[_], A](value: A): Free[F, A] = Pure(value)
+  def liftF[F[_], A](effect: F[A]): Free[F, A] = Suspend(effect)
+
+type TradeFree[A] = Free[TradeOp, A]
+
+
+
+def createTrade(trade: Trade): Free[TradeOp, Unit] =
+  Free.liftF(TradeOp.CreateTrade(trade))
+
+def modifyTrade(id: String, updatedTrade: Trade): Free[TradeOp, Unit] =
+  Free.liftF(TradeOp.ModifyTrade(id, updatedTrade))
+
+def executeTrade(trade: Trade): Free[TradeOp, Unit] =
+  Free.liftF(TradeOp.ExecuteTrade(trade))
+
+def cancelTrade(id: String): Free[TradeOp, Unit] =
+  Free.liftF(TradeOp.CancelTrade(id))
+
+def logTrade(message: String): Free[TradeOp, Unit] =
+  Free.liftF(TradeOp.LogTrade(message))
+
+// Example Program
+val program: Free[TradeOp, Unit] = for {
+  _ <- logTrade("Starting trade operations")
+  _ <- createTrade(Trade.StockTrade("T1", LocalDate.now, PositionType.Long, BigDecimal(150), 100))
+  _ <- executeTrade(Trade.StockTrade("T1", LocalDate.now, PositionType.Long, BigDecimal(150), 100))
+  _ <- logTrade("Trade operations completed")
+} yield ()
+
+
+
+sealed trait PortfolioOp[A]
+object PortfolioOp:
+  case class CreateAccount(account: Account) extends PortfolioOp[Unit]
+  case class AddSecurity(accountName: String, security: Security) extends PortfolioOp[Unit]
+  case class RemoveSecurity(accountName: String, symbol: String) extends PortfolioOp[Unit]
+  case class ModifySecurity(accountName: String, symbol: String, updatedSecurity: Security) extends PortfolioOp[Unit]
+  case class SummarizeByAccount(accountName: String) extends PortfolioOp[String]
+  case class SummarizePortfolio() extends PortfolioOp[String]
+  case class SavePortfolio(filePath: String) extends PortfolioOp[Unit]
+  case class LoadPortfolio(filePath: String) extends PortfolioOp[Portfolio]
+  case class ExecuteTrade(accountName: String, trade: Trade) extends PortfolioOp[Unit]
+  case class GetPortfolioSummary() extends PortfolioOp[String]
+
+
+object TradeInterpreter:
+  def interpret[A](program: Free[TradeOp, A]): A = program match {
+    case Free.Pure(value) => value
+    case Free.Suspend(effect) => effect match {
+      case TradeOp.CreateTrade(trade) =>
+        println(s"Creating trade: $trade")
+        ()
+      case TradeOp.ModifyTrade(id, updatedTrade) =>
+        println(s"Modifying trade $id with $updatedTrade")
+        ()
+      case TradeOp.ExecuteTrade(trade) =>
+        println(s"Executing trade: $trade")
+        ()
+      case TradeOp.CancelTrade(id) =>
+        println(s"Cancelling trade: $id")
+        ()
+      case TradeOp.LogTrade(message) =>
+        println(s"Log: $message")
+        ()
+    }
+    case Free.FlatMap(sub, f) =>
+      val intermediate = interpret(sub)
+      interpret(f(intermediate))
+  }
+
   
+class PortfolioInterpreter:
+  import YamlUtil.{given}
+
+  private val portfolioData = mutable.Map[String, Account]()
+  private var portfolio = Portfolio(accounts = List.empty)
+
+  def interpret[A](op: PortfolioOp[A]): A = op match {
+    case PortfolioOp.CreateAccount(account) =>
+      portfolio = portfolio.copy(accounts = portfolio.accounts :+ account)
+      println(s"Account '${account.name}' created.")
+      ().asInstanceOf[A]
     
-    
+    case PortfolioOp.AddSecurity(accountName, security) =>
+      portfolio = portfolio.copy(accounts = portfolio.accounts.map { account =>
+        if (account.name == accountName)
+          account.copy(securities = account.securities :+ security)
+        else account
+      })
+      println(s"Security '${security}' added to account '$accountName'.")
+      ().asInstanceOf[A]
+
+    case PortfolioOp.RemoveSecurity(accountName, symbol) =>
+      portfolio = portfolio.copy(accounts = portfolio.accounts.map { account =>
+        if (account.name == accountName)
+          account.copy(securities = account.securities.filterNot(_.symbol == symbol))
+        else account
+      })
+      println(s"Security '$symbol' removed from account '$accountName'.")
+      ().asInstanceOf[A]
+
+    case PortfolioOp.GetPortfolioSummary() =>
+      val summary = portfolio.accounts.map { account =>
+        val totalValue = account.securities.map(_.calculateValue).sum
+        s"Account: ${account.name}, Broker: ${account.brokerName}, Total Value: $$${totalValue}"
+      }.mkString("\n")
+      println("Portfolio Summary Generated.")
+      summary.asInstanceOf[A]
+  
+    case PortfolioOp.SavePortfolio(filePath) =>
+      YamlUtil.savePortfolio(portfolio, new File(filePath))
+      println(s"Portfolio saved to $filePath.")
+      ().asInstanceOf[A]
+  
+    case PortfolioOp.LoadPortfolio(filePath) =>
+      portfolio = YamlUtil.loadPortfolio(new File(filePath)).getOrElse {
+        println(s"Failed to Load Portfolio $filePath")
+        Portfolio(accounts = List.empty)
+      }
+      println(s"Portfolio loaded from $filePath.")
+      ().asInstanceOf[A]
+
+    case PortfolioOp.ExecuteTrade(accountName, trade) =>
+      portfolioData.get(accountName) match {
+        case Some(account) =>
+          val updatedSecurities = trade match {
+            case Trade.StockTrade(_, _, action, price, quantity) =>
+              val delta = if action == PositionType.Long then quantity else -quantity
+              updateSecurity(account, Stock("AAPL", delta, price)) // Replace "AAPL" with trade's symbol
+            
+            case Trade.OptionTrade(_, _, action, optionType, expiry, _, strike, premium,quantity) =>
+              val delta = if action == PositionType.Long then quantity else -quantity
+              updateSecurity(account, StockOption("AAPL",delta,premium, optionType, strike, premium,expiry)) // fix premium vs current price tbd
+            case Trade.ETFTrade(_, _, action, price, quantity) =>
+              val delta = if action == PositionType.Long then quantity else -quantity
+              updateSecurity(account, ETF("SPY", delta, price)) // Replace "SPY" with trade's symbol
+            
+            case _ => account.securities // For unsupported trade types, leave securities as-is
+          }
+          portfolioData(accountName) = account.copy(securities = updatedSecurities)
+
+        case None => println(s"Account $accountName not found!")
+      }
+
+    //case _ => println("not handled")
+  }
+
+  private def updateSecurity(account: Account, newSecurity: Security): List[Security] = {
+  val (matching, others) = account.securities.partition {
+    case s: Stock => newSecurity match {
+      case ns: Stock => s.symbol == ns.symbol
+      case _         => false
+    }
+    case o: StockOption => newSecurity match {
+      case nso: StockOption => o.symbol == nso.symbol
+      case _                => false
+    }
+    case e: ETF => newSecurity match {
+      case ne: ETF => e.symbol == ne.symbol
+      case _       => false
+    }
+    case _ => false
+  }
+
+  val updated = matching match {
+    case Nil => List(newSecurity)
+    case head :: _ => (head, newSecurity) match {
+      case (s: Stock, ns: Stock) =>
+        List(s.copy(quantity = s.quantity + ns.quantity, currentPrice = ns.currentPrice))
+      case (o: StockOption, nso: StockOption) =>
+        List(o.copy(quantity = o.quantity + nso.quantity))
+      case (e: ETF, ne: ETF) =>
+        List(e.copy(quantity = e.quantity + ne.quantity, currentPrice = ne.currentPrice))
+      case _ => List(newSecurity)
+    }
+  }
+
+  others ++ updated
+  }
+
+
+
+// DSL
+def createAccount(account: Account): Free[PortfolioOp, Unit] =
+  Free.liftF(PortfolioOp.CreateAccount(account))
+
+def addSecurity(accountName: String, security: Security): Free[PortfolioOp, Unit] =
+  Free.liftF(PortfolioOp.AddSecurity(accountName, security))
+
+def removeSecurity(accountName: String, symbol: String): Free[PortfolioOp, Unit] =
+  Free.liftF(PortfolioOp.RemoveSecurity(accountName, symbol))
+
+def modifySecurity(accountName: String, symbol: String, updatedSecurity: Security): Free[PortfolioOp, Unit] =
+  Free.liftF(PortfolioOp.ModifySecurity(accountName, symbol, updatedSecurity))
+
+def summarizeByAccount(accountName: String): Free[PortfolioOp, String] =
+  Free.liftF(PortfolioOp.SummarizeByAccount(accountName))
+
+def summarizePortfolio(): Free[PortfolioOp, String] =
+  Free.liftF(PortfolioOp.SummarizePortfolio())
+
+def savePortfolio(filePath: String): Free[PortfolioOp, Unit] =
+  Free.liftF(PortfolioOp.SavePortfolio(filePath))
+
+def loadPortfolio(filePath: String): Free[PortfolioOp, Portfolio] =
+  Free.liftF(PortfolioOp.LoadPortfolio(filePath))
+
+@main def freeMonadPortfolio(): Unit = 
+  val account1 = Account(name = "RetirementFund", brokerName = "BrokerA", securities = List.empty)
+  val account2 = Account(name = "TradingAccount", brokerName = "BrokerB", securities = List.empty)
+
+  
+  val createAccountOp = PortfolioOp.CreateAccount(account1)
+  val createAnotherAccountOp = PortfolioOp.CreateAccount(account2)
+
+  // Execute trades for stocks, options, and ETFs
+  val stockTrade = Trade.StockTrade(
+    transactionId = "ST123",
+    transactionDate = LocalDate.now(),
+    action = PositionType.Long,
+    price = BigDecimal(200.0),
+    quantity = 50
+  )
+
+  val optionTrade = Trade.OptionTrade(
+    transactionId = "OT123",
+    transactionDate = LocalDate.now(),
+    action = PositionType.Short,
+    optionType = OptionType.Call,
+    expiry = LocalDate.now().plusMonths(1),
+    timeToExpiry = BigDecimal(0.083), // Approximately 1/12 year
+    strike = BigDecimal(210.0),
+    premium = BigDecimal(5.0),
+    quantity = 10
+  )
+
+  val executeStockTradeOp = PortfolioOp.ExecuteTrade("Account1", stockTrade)
+  val executeOptionTradeOp = PortfolioOp.ExecuteTrade("Account2", optionTrade)
+
+  // Save and load portfolio
+  val savePortfolioOp = PortfolioOp.SavePortfolio("portfolio.yaml")
+  val loadPortfolioOp = PortfolioOp.LoadPortfolio("portfolio.yaml")
+
+  // Usage with PortfolioInterpreter
+  val portfolioInterpreter = new PortfolioInterpreter()
+
+  portfolioInterpreter.interpret(createAccountOp)
+  portfolioInterpreter.interpret(createAnotherAccountOp)
+  portfolioInterpreter.interpret(executeStockTradeOp)
+  portfolioInterpreter.interpret(executeOptionTradeOp)
+  portfolioInterpreter.interpret(savePortfolioOp)
+  portfolioInterpreter.interpret(loadPortfolioOp)
+  val summary = portfolioInterpreter.interpret(PortfolioOp.GetPortfolioSummary())
+  println(summary)
+
 
 @main def reportTrades(): Unit =
     val directory = "./src/main/resources/" // Replace with your directory
