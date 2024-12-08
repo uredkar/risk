@@ -6,14 +6,14 @@ accounts:
     symbol: SPY
     quantity: 20
     currentPrice: 400.0
-  - type: StockOption
-    symbol: TSLA
-    premium: 5.0
-    quantity: 10
+  - symbol: TSLA
     optionType: Call
-    expiryDate: '2024-06-30'
+    quantity: 10
     strikePrice: 750.0
+    premium: 5.0
     currentPrice: 50.0
+    expiryDate: '2024-06-30'
+    type: StockOption
 - name: Account2
   brokerName: BrokerB
   securities:

@@ -6,13 +6,13 @@ accounts:
     symbol: AAPL
     quantity: 100
     currentPrice: 150.0
-  - quantity: 50
-    yieldPercentage: 3.5
-    symbol: GOVT
+  - yieldPercentage: 3.5
     maturityDate: '2030-12-31'
     currentPrice: 1000.0
+    symbol: GOVT
     parValue: 1000.0
     type: Bond
+    quantity: 50
 - name: Account2
   brokerName: BrokerB
   securities:
@@ -20,11 +20,11 @@ accounts:
     symbol: SPY
     quantity: 20
     currentPrice: 400.0
-  - currentPrice: 50.0
-    type: StockOption
-    premium: 5.0
-    expiryDate: '2024-06-30'
-    strikePrice: 750.0
-    optionType: Call
+  - strikePrice: 750.0
     quantity: 10
+    currentPrice: 50.0
+    premium: 5.0
     symbol: TSLA
+    type: StockOption
+    expiryDate: '2024-06-30'
+    optionType: Call

@@ -3,6 +3,9 @@ import com.definerisk.core.utils.YamlUtil.{*,given}
 import cats.data.Validated
 import cats.Functor
 import cats.implicits._
+import cats.free.Free
+import cats.Id
+import cats.~>
 import com.definerisk.core.dsl.{*,given}
 import java.io.PrintWriter
 import java.time.LocalDate
@@ -128,18 +131,7 @@ class SafeContainer[F[_]](val data: F[Option[Int]])(using functor: Functor[F]) {
   }
 }
 
-
-sealed trait TradeOp[A]
-
-object TradeOp:
-  case class CreateTrade(trade: Trade) extends TradeOp[Unit]
-  case class ModifyTrade(id: String, updatedTrade: Trade) extends TradeOp[Unit]
-  case class ExecuteTrade(trade: Trade) extends TradeOp[Unit]
-  case class CancelTrade(id: String) extends TradeOp[Unit]
-  case class LogTrade(message: String) extends TradeOp[Unit]
-
-
-
+/*
 sealed trait Free[F[_], A]:
   def flatMap[B](f: A => Free[F, B]): Free[F, B] = Free.FlatMap(this, f)
   def map[B](f: A => B): Free[F, B] = flatMap(a => Free.Pure(f(a)))
@@ -151,8 +143,8 @@ object Free:
 
   def pure[F[_], A](value: A): Free[F, A] = Pure(value)
   def liftF[F[_], A](effect: F[A]): Free[F, A] = Suspend(effect)
-
-type TradeFree[A] = Free[TradeOp, A]
+*/
+//type TradeFree[A] = Free[TradeOp, A]
 
 
 
@@ -169,33 +161,38 @@ object PortfolioOp:
   case class ExecuteTrade(accountName: String, trade: Trade) extends PortfolioOp[Unit]
   case class GetPortfolioSummary() extends PortfolioOp[String]
 
+type PortfolioDSL[A] = Free[PortfolioOp, A]
 
-object TradeInterpreter:
-  def interpret[A](program: Free[TradeOp, A]): A = program match {
-    case Free.Pure(value) => value
-    case Free.Suspend(effect) => effect match {
-      case TradeOp.CreateTrade(trade) =>
-        println(s"Creating trade: $trade")
-        ()
-      case TradeOp.ModifyTrade(id, updatedTrade) =>
-        println(s"Modifying trade $id with $updatedTrade")
-        ()
-      case TradeOp.ExecuteTrade(trade) =>
-        println(s"Executing trade: $trade")
-        ()
-      case TradeOp.CancelTrade(id) =>
-        println(s"Cancelling trade: $id")
-        ()
-      case TradeOp.LogTrade(message) =>
-        println(s"Log: $message")
-        ()
-    }
-    case Free.FlatMap(sub, f) =>
-      val intermediate = interpret(sub)
-      interpret(f(intermediate))
-  }
-
+object PortfolioDSL {
+  def createAccount(account: Account): PortfolioDSL[Unit] =
+    Free.liftF(PortfolioOp.CreateAccount(account))
   
+  def addSecurity(accountName: String, security: Security): PortfolioDSL[Unit] =
+    Free.liftF(PortfolioOp.AddSecurity(accountName, security))
+}
+
+object PortfolioDSLInterpreter extends (PortfolioOp ~> Id) {
+  def apply[A](fa: PortfolioOp[A]): Id[A] = fa match {
+    case PortfolioOp.CreateAccount(account) =>
+      // Perform the operation
+      println(s"createAccount $account")
+      ()
+    case PortfolioOp.AddSecurity(accountName, security) =>
+      // Perform the operation
+      println(s"AddSecurity $accountName $security")
+      ()
+  }
+}
+
+
+def test_dsl_free_monad() =
+  import PortfolioDSL._
+  val program: PortfolioDSL[Unit] = for {
+    _ <- createAccount(Account("Account1", "BrokerA", List.empty))
+    _ <- addSecurity("Account1", Stock("AAPL", 10, 150.0))
+  } yield ()
+  program.foldMap(PortfolioDSLInterpreter)
+
 class PortfolioInterpreter:
   import YamlUtil.{given}
 
@@ -510,3 +507,4 @@ def test_typed_lambda() =
     test_mycompose()
     test_typed_lambda()
     test_optionT()
+    test_dsl_free_monad()
