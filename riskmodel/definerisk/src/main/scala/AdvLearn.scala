@@ -73,6 +73,27 @@ given Functor[List] with
 type Flatten[F[_]] = [A, B] =>> F[Option[A]] => F[Option[B]]
 
 
+trait Monoid[A] {
+  def mappend(a1: A, a2: A): A
+  def mzero: A
+}
+
+object Monoid {
+  given IntMonoid: Monoid[Int] = new Monoid[Int] {
+    def mappend(a: Int, b: Int): Int = a + b
+    def mzero: Int = 0
+  }
+  given StringMonoid: Monoid[String] = new Monoid[String] {
+    def mappend(a: String, b: String): String = a + b
+    def mzero: String = ""
+  }
+}
+def sum[A: Monoid](xs: List[A])(using m: Monoid[A]): A = {
+  
+  xs.foldLeft(m.mzero)(m.mappend)
+}
+
+
 
 trait Monad[F[_]] extends Functor[F]:
   def pure[A](a: A): F[A]
@@ -483,6 +504,20 @@ def test_typed_lambda() =
 
 
 
+@main def testMonoid() =
+
+  val x1 = sum(List("a", "b", "c"))
+  println(s"x1 $x1")
+  val x2 = sum(List(1, 2, 3, 4))
+  println(s"x2 $x2")
+  {
+  given multiMonoid: Monoid[Int] = new Monoid[Int] {
+        def mappend(a: Int, b: Int): Int = a * b
+        def mzero: Int = 1
+      }
+  val x3 = sum(List(1, 2, 3, 4))
+  println(s"x3 $x3")
+  }
 
 @main def testMonads() =     
     println("\nFirst element -------")
