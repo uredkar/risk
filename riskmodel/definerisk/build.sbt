@@ -51,6 +51,7 @@ lazy val root = project
     libraryDependencies += "io.circe" %% "circe-generic" % "0.14.6",
     libraryDependencies += "io.circe" %% "circe-parser" % "0.14.6",
     libraryDependencies += "org.typelevel" %% "cats-core" % "2.10.0",
-    libraryDependencies += "org.typelevel" %% "cats-free" % "2.10.0"
+    libraryDependencies += "org.typelevel" %% "cats-free" % "2.10.0",
+    libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.3.8"
 
   )
