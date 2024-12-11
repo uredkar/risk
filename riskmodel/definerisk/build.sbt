@@ -52,6 +52,9 @@ lazy val root = project
     libraryDependencies += "io.circe" %% "circe-parser" % "0.14.6",
     libraryDependencies += "org.typelevel" %% "cats-core" % "2.10.0",
     libraryDependencies += "org.typelevel" %% "cats-free" % "2.10.0",
-    libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.3.8"
+    libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.3.8",
+    libraryDependencies += "com.typesafe" % "config" % "1.4.2",
+    libraryDependencies += "com.lihaoyi" %% "pprint" % "0.8.1",                // Pretty Printing
+    libraryDependencies += "com.github.tototoshi" %% "scala-csv" % "2.0.0"     // Tabular formatting
 
   )

@@ -1,4 +1,5 @@
 
+
 def isprime(n:Int): Boolean = 
     (n > 1) && (2 to Math.sqrt(n).toInt).exists( x => n % x == 0 ) == false
 
