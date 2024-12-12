@@ -543,3 +543,17 @@ def test_typed_lambda() =
     test_typed_lambda()
     test_optionT()
     test_dsl_free_monad()
+
+
+@main def functional() =
+  def compose[X, Y, Z](f: X ⇒ Y, g: Y ⇒ Z): X ⇒ Z = 
+    x ⇒ g(f(x))
+
+  val f = compose((x: Int) ⇒ x % 2 == 0, (y: Boolean) ⇒ y.toString)
+  val x1 = f(23) 
+  println(s"compose $x1")
+
+  val f2 = compose[Int, Boolean, String](_ % 2 == 0, _.toString)
+  val x2 = f2(23)
+  val x3 = f2(22)
+  println(s"compose $x2 $x3")
