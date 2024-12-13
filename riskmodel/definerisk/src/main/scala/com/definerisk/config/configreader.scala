@@ -20,6 +20,7 @@ object ConfigReader {
 
   val dataFileLocation: String = config.getString("app.files.dataFileLocation")
   val outputDirectory: String = config.getString("app.files.outputDirectory")
+  val rulesEngineLogDirectory: String = config.getString("app.files.rulesEngineLogDirectory")
 
   def main(args: Array[String]): Unit = {
     // Print the loaded configuration values
