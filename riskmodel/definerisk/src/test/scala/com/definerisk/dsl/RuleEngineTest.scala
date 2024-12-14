@@ -125,28 +125,38 @@ class RuleEngineTest extends AnyFunSuite with Matchers with BeforeAndAfterAll {
         val query2 = Compound("bachelor", List(Atom("peter")))
         val query3 = Compound("married", List(Atom("jim")))
         val result1 = backwardChaining(query1, rules, facts)
+        writer.println("-----------------------------------------------------------------")
         writer.println(s"Query Result for backwardChaining $query1: $result1")
-
+        writer.println("-----------------------------------------------------------------")
         val result2 = backwardChaining(query2, rules, facts)
+        
+        writer.println("-----------------------------------------------------------------")
         writer.println(s"Query Result for backwardChaining $query2: $result2")
-
+        writer.println("-----------------------------------------------------------------")
         val result3 = backwardChaining(query3, rules, facts)
+        writer.println("-----------------------------------------------------------------")
         writer.println(s"Query Result for backwardChaining $query3: $result3")
-
+        writer.println("-----------------------------------------------------------------")
 
         // Test forward chaining
         val derivedFacts = forwardChaining(facts, rules)
+        writer.println("-----------------------------------------------------------------")
         writer.println(s"Derived Facts bachelor forwardChaining: $derivedFacts")
-
+        writer.println("-----------------------------------------------------------------")
+        
         // Query for bachelor
         val bachelorQuery = Compound("bachelor", List(Atom("john")))
         val resultfc1 = query(derivedFacts, bachelorQuery)
-        writer.println(s"bachelorQuery Result forwardChaining: $resultfc1")
-
+        
+        writer.println("-----------------------------------------------------------------")
+        writer.println(s"bachelor john Result forwardChaining: $resultfc1")
+        writer.println("-----------------------------------------------------------------")
+        
         val bachelorQuery2 = Compound("married", List(Atom("jim")))
         val resultfc2 = query(derivedFacts, bachelorQuery2)
-        writer.println(s"bachelorQuery Result forwardChaining: $resultfc2")
-        
+        writer.println("-----------------------------------------------------------------")
+        writer.println(s"married jim Result forwardChaining: $resultfc2")
+        writer.println("-----------------------------------------------------------------")
     }
 
     test("testMotherQuery") {

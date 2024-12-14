@@ -344,7 +344,7 @@ def loadRules(file: File): Either[io.circe.Error, List[Rule]] =
   val file = new File("rules.yaml")
   saveRules(KnowledgeBase.rules,file)
   val rules = loadRules(file) match {
-    case Right(loadedRules) => //println(s"loadedRules loaded: $loadedRules")
+    case Right(loadedRules) => println(s"loadedRules loaded: $loadedRules")
       //testMotherQuery(loadedRules)
       //testAncestorQuery(loadedRules)
       //testForwardChaining(loadedRules)
