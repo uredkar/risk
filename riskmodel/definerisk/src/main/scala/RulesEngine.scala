@@ -98,9 +98,12 @@ def unify(term1: Term, term2: Term, subst: Substitution)(using writer: PrinterWr
       unifyVariable(Variable(name), term, subst)
 
     case (Compound(f1, args1), Compound(f2, args2)) if f1 == f2 && args1.size == args2.size =>
-      val args = unifyArgs(args1, args2, subst)
-      writer.println(s"*** Unifying compounds: term1 $term1 = term2 $term2 args = $args subst $subst")
-      args
+       unifyArgs(args1, args2, subst).flatMap(newSubst =>
+         if (newSubst == subst) Some(subst) else Some(newSubst)
+      )
+      //val args = unifyArgs(args1, args2, subst)
+      //writer.println(s"*** Unifying compounds: term1 $term1 = term2 $term2 args = $args subst $subst")
+      //args
 
     case other =>
       writer.println(s"\t\tFailed to unify $other with $term2")
@@ -114,21 +117,25 @@ def unify(term1: Term, term2: Term, subst: Substitution)(using writer: PrinterWr
 
 // Unify argument lists
 def unifyVariable(v: Variable, t: Term, subst: Substitution)(using writer: PrinterWriter): Option[Substitution] = {
+  writer.println(s"unifyVariable called: $v -> $t with $subst")
   if (subst.contains(v)) {
-    // If the variable is already in the substitution, unify with its value
+    writer.println(s"Variable $v is already substituted: ${subst(v)}")
     unify(subst(v), t, subst)
-  } else if (t.isInstanceOf[Variable] && subst.contains(t.asInstanceOf[Variable])) {
+  } else if (occursCheck(v, t, subst)) {
+    writer.println(s"Occurs-check failed for $v in $t")
+    None
+  }
+  else if (t.isInstanceOf[Variable] && subst.contains(t.asInstanceOf[Variable])) {
     // If `t` is a variable and already substituted, unify with its substitution
     unify(v, subst(t.asInstanceOf[Variable]), subst)
   } else if (t == v) {
     // Variable equals the term
     Some(subst)
-  } else if (occursCheck(v, t, subst)) {
-    // Occurs check prevents infinite recursion
-    None
-  } else {
+  }  else {
     // Add the new substitution
-    Some(subst + (v -> t))
+    val newSubst = subst + (v -> t)
+    writer.println(s"Adding substitution: $v -> $t. New substitution: $newSubst")
+    Some(newSubst)
   }
 }
 
@@ -164,22 +171,102 @@ def occursCheck(variable: Variable, term: Term, subst: Substitution)(using write
     term match {
       case `variable` => true
       case Compound(_, args) => args.exists(arg => occurs(variable, applySubstitution(arg, subst)))
+      case v: Variable => subst.get(v).exists(subTerm => occurs(variable, subTerm))
+    
       case _ => false
     }
   }
   occurs(variable, term)
 }
-
-def applySubstitution(term: Term, subst: Substitution)(using writer: PrinterWriter): Term = {
+private val substitutionCache = scala.collection.mutable.Map[Term, Term]()
+def applySubstitution_old(term: Term, subst: Substitution)(using writer: PrinterWriter): Term = {
   writer.println(s"\tapplySubstitution term $term subst $subst")
-  term match {
-    case v: Variable => subst.getOrElse(v, v)
-    case Compound(f, args) => Compound(f, args.map(arg => applySubstitution(arg, subst)))
-    case atom => atom
+  //if (depth > 100) throw new StackOverflowError("Recursion depth exceeded in applySubstitution")
+  if (substitutionCache.contains(term)) {
+    substitutionCache(term)
+  } 
+  else {
+    val substituted = applySubstitution_old(term, subst)
+    substitutionCache(term) = substituted
+    substituted
   }
+  
+}
+
+def applySubstitution_old2(term: Term, subst: Substitution): Term = {
+  import scala.collection.mutable
+
+  // Stack to keep track of terms to process
+  val stack = mutable.Stack[(Term, List[Term])]()
+
+  // Map to store substitution results for compound terms
+  val cache = mutable.Map[Term, Term]()
+
+  // Push the initial term to the stack
+  stack.push((term, Nil))
+
+  while (stack.nonEmpty) {
+    val (currentTerm, processedArgs) = stack.pop()
+
+    currentTerm match {
+      case v: Variable =>
+        // Substitute the variable if it exists in the substitution map
+        val substituted = subst.getOrElse(v, v)
+        if (substituted == v) {
+          // No substitution needed
+          cache(currentTerm) = v
+        } else {
+          // Push the substituted term back to process
+          stack.push((substituted, Nil))
+        }
+
+      case Compound(f, args) =>
+        if (args.isEmpty) {
+          // All arguments processed: reconstruct the term
+          cache(currentTerm) = Compound(f, processedArgs.reverse)
+        } else {
+          // Push the remaining arguments to the stack
+          val headArg = args.head
+          val tailArgs = args.tail
+          stack.push((Compound(f, tailArgs), processedArgs)) // Remaining args
+          stack.push((headArg, Nil))                         // Current arg
+        }
+
+      case atom =>
+        // Atoms remain unchanged
+        cache(currentTerm) = atom
+    }
+  }
+
+  // Return the substituted term
+  cache(term)
 }
 
 
+
+
+
+def applySubstitution(term: Term, subst: Substitution): Term = {
+  def substituteCompound(args: List[Term], acc: List[Term]): List[Term] = {
+    args match {
+      case Nil => acc.reverse
+      case head :: tail =>
+        val substitutedHead = applySubstitution(head, subst)
+        substituteCompound(tail, substitutedHead :: acc)
+    }
+  }
+
+  term match {
+    case v: Variable =>
+      subst.getOrElse(v, v)
+
+    case Compound(f, args) =>
+      val substitutedArgs = substituteCompound(args, Nil)
+      Compound(f, substitutedArgs)
+
+    case atom => atom
+  }
+}
 
 
 def backwardChaining(

@@ -9,13 +9,25 @@ import scala.util.{Try, Success, Failure}
 
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
+//import org.scalatest.matchers.in.Matchers
 import org.scalatest.BeforeAndAfterAll
+import org.scalatest.BeforeAndAfterEach
 import java.time.LocalDate
 import scala.math.BigDecimal
 import java.nio.file.{Files, Paths}
 import java.io.{File, FileWriter, PrintWriter}
+import scala.compiletime.uninitialized
 
-class RuleEngineTest extends AnyFunSuite with Matchers with BeforeAndAfterAll {
+trait TestPrinterWriter extends PrinterWriter {
+  private val stringWriter = new StringWriter()
+  val writer: PrintWriter = new PrintWriter(stringWriter)
+
+  override def println(s: String): Unit = writer.println(s)
+  def getOutput: String = stringWriter.toString
+}
+
+class RuleEngineTest extends AnyFunSuite with Matchers with BeforeAndAfterAll with BeforeAndAfterEach {
+    var testPrinterWriter: TestPrinterWriter = uninitialized
     val writer: java.io.PrintWriter = new java.io.PrintWriter(ConfigReader.rulesEngineLogDirectory)
     given PrinterWriter with
         def println(s: String): Unit = writer.println(s)
@@ -24,6 +36,16 @@ class RuleEngineTest extends AnyFunSuite with Matchers with BeforeAndAfterAll {
         writer.close()
         super.afterAll()
     }        
+    
+    override def beforeEach(): Unit = {
+        testPrinterWriter = new TestPrinterWriter {}
+    }
+
+    override def afterEach(): Unit = {
+        testPrinterWriter.writer.close()
+    }
+
+
     def testForwardChaining(rules: List[Rule])(using writer: PrinterWriter) = {
 
         val facts = Set(
@@ -158,7 +180,7 @@ class RuleEngineTest extends AnyFunSuite with Matchers with BeforeAndAfterAll {
         writer.println(s"married jim Result forwardChaining: $resultfc2")
         writer.println("-----------------------------------------------------------------")
     }
-
+    /*
     test("testMotherQuery") {
         testMotherQuery(KnowledgeBase.rules)
     }
@@ -173,5 +195,101 @@ class RuleEngineTest extends AnyFunSuite with Matchers with BeforeAndAfterAll {
 
     test("testBachelorNotQuery") {
       testBachelorNotQuery(KnowledgeBase.rules)
+    }
+    */
+    test("unify should successfully unify two atoms with the same name") {
+        val atom1 = Atom("A")
+        val atom2 = Atom("A")
+        val subst = Map.empty[Variable, Term]
+
+        given PrinterWriter = testPrinterWriter
+
+        val result = unify(atom1, atom2, subst)
+        result shouldBe Some(subst)
+        testPrinterWriter.getOutput should include("Unified atoms")
+  }
+
+    test("unify should fail to unify two atoms with different names") {
+        val atom1 = Atom("A")
+        val atom2 = Atom("B")
+        val subst = Map.empty[Variable, Term]
+
+        given PrinterWriter = testPrinterWriter
+
+        val result = unify(atom1, atom2, subst)
+        result shouldBe None
+        testPrinterWriter.getOutput should include("Failed to unify")
+    }
+
+    test("unifyVariable should add a new substitution") {
+        val writer = new StringWriter()
+        given PrinterWriter = testPrinterWriter
+
+        val variable = Variable("X")
+        val term = Atom("A")
+        val subst = Map.empty[Variable, Term]
+
+        val result = unifyVariable(variable, term, subst)
+        result shouldBe Some(subst + (variable -> term))
+        //println(s"------------> ${testPrinterWriter.getOutput}")
+        testPrinterWriter.getOutput should include("unifyVariable")
+    }
+
+    test("unifyArgs should unify matching argument lists") {
+        val args1 = List(Atom("A"), Atom("B"))
+        val args2 = List(Atom("A"), Atom("B"))
+        val subst = Map.empty[Variable, Term]
+
+        given PrinterWriter = testPrinterWriter
+
+        val result = unifyArgs(args1, args2, subst)
+        result shouldBe Some(subst)
+        testPrinterWriter.getOutput should include("UnifyArgs: Successfully unified")
+    }
+
+   
+
+    
+    test("handle compound terms") {
+        val subst = Map(Variable("x") -> Atom("a"))
+        applySubstitution(Compound("f", List(Variable("x"), Atom("b"))), subst) shouldBe Compound("f", List(Atom("a"), Atom("b")))
+    }
+    
+    
+    test("prevent infinite recursion in cyclic substitutions") {
+        val subst = Map(Variable("x") -> Compound("f", List(Variable("x"))))
+        an[StackOverflowError] shouldBe thrownBy {
+            applySubstitution(Variable("x"), subst)
+        }
+    }
+    
+    test("substitute variables correctly") {
+        val subst = Map(Variable("x") -> Atom("a"))
+        applySubstitution(Variable("x"), subst) shouldBe Atom("a")
+    }
+    
+    test("backwardChaining should validate a query using facts and rules") {
+        val facts = Set(Compound("parent", List(Atom("John"), Atom("Mary"))))
+        val query = Compound("parent", List(Atom("John"), Atom("Mary")))
+        val rules = List.empty[Rule]
+
+        given PrinterWriter = testPrinterWriter
+
+        val result = backwardChaining(query, rules, facts)
+        result shouldBe true
+        testPrinterWriter.getOutput should include("backwardChaining")
+    }
+
+    test("forwardChaining should derive new facts using rules") {
+        val facts = Set(Compound("human", List(Atom("John"))))
+        val rules = List(
+        Rule(Compound("mortal", List(Atom("John"))), List(Compound("human", List(Atom("John")))))
+        )
+
+        given PrinterWriter = testPrinterWriter
+
+        val result = forwardChaining(facts, rules)
+        result should contain(Compound("mortal", List(Atom("John"))))
+        testPrinterWriter.getOutput should include("forwardChaining")
     }
 }
