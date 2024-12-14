@@ -1,0 +1,118 @@
+- head:
+    functor: male
+    args:
+    - Atom: john
+  body: []
+- head:
+    functor: male
+    args:
+    - Atom: peter
+  body: []
+- head:
+    functor: female
+    args:
+    - Atom: lisa
+  body: []
+- head:
+    functor: female
+    args:
+    - Atom: susan
+  body: []
+- head:
+    functor: female
+    args:
+    - Atom: monia
+  body: []
+- head:
+    functor: parent
+    args:
+    - Atom: john
+    - Atom: susan
+  body: []
+- head:
+    functor: parent
+    args:
+    - Atom: monia
+    - Atom: john
+  body: []
+- head:
+    functor: parent
+    args:
+    - Atom: susan
+    - Atom: lisa
+  body: []
+- head:
+    functor: parent
+    args:
+    - Atom: john
+    - Atom: mary
+  body: []
+- head:
+    functor: parent
+    args:
+    - Atom: mary
+    - Atom: peter
+  body: []
+- head:
+    functor: mother
+    args:
+    - Variable: X
+    - Variable: Y
+  body:
+  - functor: female
+    args:
+    - Variable: X
+  - functor: parent
+    args:
+    - Variable: X
+    - Variable: Y
+- head:
+    functor: ancestor
+    args:
+    - Variable: X
+    - Variable: Y
+  body:
+  - functor: parent
+    args:
+    - Variable: X
+    - Variable: Y
+- head:
+    functor: ancestor
+    args:
+    - Variable: X
+    - Variable: Y
+  body:
+  - functor: parent
+    args:
+    - Variable: X
+    - Variable: Z
+  - functor: cut
+    args: []
+  - functor: ancestor
+    args:
+    - Variable: Z
+    - Variable: Y
+- head:
+    functor: bachelor
+    args:
+    - Variable: X
+  body:
+  - functor: male
+    args:
+    - Variable: X
+  - innerQuery:
+      functor: female
+      args:
+      - Variable: X
+- head:
+    functor: bachelor
+    args:
+    - Variable: X
+  body:
+  - functor: male
+    args:
+    - Variable: X
+  - innerQuery:
+      functor: married
+      args:
+      - Variable: X

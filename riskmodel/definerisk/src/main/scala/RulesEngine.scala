@@ -1,5 +1,18 @@
+package com.definerisk.core.models
+
 import scala.annotation.tailrec
-import java.io.PrintWriter
+
+import io.circe.{Encoder, Decoder, Json}
+import io.circe.generic.semiauto._
+import io.circe.syntax._
+import io.circe.yaml.syntax._
+import io.circe.yaml.parser
+import io.circe.yaml.Printer
+import io.circe._
+import java.io.{File, FileWriter, PrintWriter}
+import scala.io.Source
+
+
 // Define the Term ADT
 sealed trait Term
 case class Atom(name: String) extends Term
@@ -13,20 +26,75 @@ case class Rule(head: Compound, body: List[Compound | Not])
 // Substitution maps Variables to Terms
 type Substitution = Map[Variable, Term]
 
-val writer = new PrintWriter(ConfigReader.rulesEngineLogDirectory)
+// Encoders for Term
 
-def unify(term1: Term, term2: Term, subst: Substitution): Option[Substitution] = {
+given Encoder[Term] with
+  def apply(term: Term): Json = term match
+    case Atom(name) => Json.obj("Atom" -> Json.fromString(name))
+    case Variable(name) => Json.obj("Variable" -> Json.fromString(name))
+    case Compound(functor, args) =>
+      Json.obj(
+        "Compound" -> Json.obj(
+          "functor" -> Json.fromString(functor),
+          "args" -> Json.arr(args.map(Encoder[Term].apply)*)
+        )
+      )
+    case Not(innerQuery) =>
+      Json.obj(
+        "Not" -> Json.obj(
+          "innerQuery" -> Encoder[Compound].apply(innerQuery)
+        )
+      )
+
+  // Decoder for Term
+given Decoder[Term] with
+  def apply(c: HCursor): Decoder.Result[Term] =
+    c.keys.flatMap(_.headOption) match
+      case Some("Atom")     => c.downField("Atom").as[String].map(Atom.apply)
+      case Some("Variable") => c.downField("Variable").as[String].map(Variable.apply)
+      case Some("Compound") =>
+        for
+          functor <- c.downField("Compound").downField("functor").as[String]
+          args <- c.downField("Compound").downField("args").as[List[Term]]
+        yield Compound(functor, args)
+      case Some("Not") =>
+        c.downField("Not").downField("innerQuery").as[Compound].map(Not.apply)
+      case _ => Left(DecodingFailure("Unknown Term type", c.history))
+
+// Encoders and Decoders for other types
+given Encoder[Compound] = deriveEncoder[Compound]
+given Encoder[Not] = deriveEncoder[Not]
+given Encoder[Compound | Not] with
+  def apply(value: Compound | Not): Json = value match
+    case c: Compound => Encoder[Compound].apply(c)
+    case n: Not      => Encoder[Not].apply(n)
+
+given Decoder[Compound] = deriveDecoder[Compound]
+given Decoder[Not] = deriveDecoder[Not]
+given Decoder[Compound | Not] with
+  def apply(c: HCursor): Decoder.Result[Compound | Not] =
+    if c.keys.exists(_.mkString.contains("functor")) then Decoder[Compound].apply(c)
+    else Decoder[Not].apply(c)
+
+given Encoder[Rule] = deriveEncoder[Rule]
+given Decoder[Rule] = deriveDecoder[Rule]
+
+
+
+
+
+def unify(term1: Term, term2: Term, subst: Substitution)(using writer: PrinterWriter): Option[Substitution] = {
   writer.println(s"with $term2 subst $subst")
   val subs = (term1, term2) match {
     case (Atom(name1), Atom(name2)) if name1 == name2 =>
-      //writer.println(s"** Unified atoms: $term1 = $term2")
+      writer.println(s"** Unified atoms: $term1 = $term2")
       Some(subst)
     case (Variable(name), term) =>
-      //writer.println(s"*** Unifying variable $name with term $term")
+      writer.println(s"*** Unifying variable $name with term $term")
       unifyVariable(Variable(name), term, subst)
 
     case (term, Variable(name)) =>
-      //writer.println(s"*** Unifying term $term with variable $name")
+      writer.println(s"*** Unifying term $term with variable $name")
       unifyVariable(Variable(name), term, subst)
 
     case (Compound(f1, args1), Compound(f2, args2)) if f1 == f2 && args1.size == args2.size =>
@@ -45,7 +113,7 @@ def unify(term1: Term, term2: Term, subst: Substitution): Option[Substitution] =
 
 
 // Unify argument lists
-def unifyVariable(v: Variable, t: Term, subst: Substitution): Option[Substitution] = {
+def unifyVariable(v: Variable, t: Term, subst: Substitution)(using writer: PrinterWriter): Option[Substitution] = {
   if (subst.contains(v)) {
     // If the variable is already in the substitution, unify with its value
     unify(subst(v), t, subst)
@@ -65,7 +133,7 @@ def unifyVariable(v: Variable, t: Term, subst: Substitution): Option[Substitutio
 }
 
 
-def unifyArgs(args1: List[Term], args2: List[Term], subst: Substitution): Option[Substitution] = {
+def unifyArgs(args1: List[Term], args2: List[Term], subst: Substitution)(using writer: PrinterWriter): Option[Substitution] = {
   writer.println(s"Attempting to unify argument lists: $args1 with $args2 using substitution $subst")
   (args1, args2) match {
     case (Nil, Nil) =>
@@ -91,7 +159,7 @@ def unifyArgs(args1: List[Term], args2: List[Term], subst: Substitution): Option
 
 
 
-def occursCheck(variable: Variable, term: Term, subst: Substitution): Boolean = {
+def occursCheck(variable: Variable, term: Term, subst: Substitution)(using writer: PrinterWriter): Boolean = {
   def occurs(variable: Variable, term: Term): Boolean = {
     term match {
       case `variable` => true
@@ -102,7 +170,7 @@ def occursCheck(variable: Variable, term: Term, subst: Substitution): Boolean = 
   occurs(variable, term)
 }
 
-def applySubstitution(term: Term, subst: Substitution): Term = {
+def applySubstitution(term: Term, subst: Substitution)(using writer: PrinterWriter): Term = {
   writer.println(s"\tapplySubstitution term $term subst $subst")
   term match {
     case v: Variable => subst.getOrElse(v, v)
@@ -111,98 +179,18 @@ def applySubstitution(term: Term, subst: Substitution): Term = {
   }
 }
 
-def testBachelorNotQuery(): Unit = {
-  // Knowledge Base
-  val rules: List[Rule] = List(
-    // Bachelor rule with negation
-    Rule(Compound("bachelor", List(Variable("X"))), List(
-      Compound("male", List(Variable("X"))),
-      Not(Compound("married", List(Variable("X"))))
-    ))
-  )
-
-  val facts: Set[Compound] = Set(
-    Compound("male", List(Atom("john"))),
-    Compound("male", List(Atom("peter"))),
-    Compound("male", List(Atom("jim"))),
-    Compound("female", List(Atom("lisa"))),
-    Compound("female", List(Atom("susan"))),
-    Compound("parent", List(Atom("john"), Atom("susan"))),
-    Compound("parent", List(Atom("john"), Atom("mary"))),
-    Compound("parent", List(Atom("lisa"), Atom("peter"))),
-    Compound("married", List(Atom("jim")))
-  )
-
-  // Define the query function
-  def query(facts: Set[Compound], goal: Compound): Boolean = {
-    facts.exists(fact => unify(goal, fact, Map()).isDefined)
-  }
-  val query1 = Compound("bachelor", List(Atom("john")))
-  val query2 = Compound("bachelor", List(Atom("peter")))
-  val query3 = Compound("married", List(Atom("jim")))
-  val result1 = backwardChaining(query1, rules, facts)
-  println(s"Query Result for backwardChaining $query1: $result1")
-
-  val result2 = backwardChaining(query2, rules, facts)
-  println(s"Query Result for backwardChaining $query2: $result2")
-
-  val result3 = backwardChaining(query3, rules, facts)
-  println(s"Query Result for backwardChaining $query3: $result3")
 
 
-  // Test forward chaining
-  val derivedFacts = forwardChaining(facts, rules)
-  println(s"Derived Facts bachelor forwardChaining: $derivedFacts")
-
-  // Query for bachelor
-  val bachelorQuery = Compound("bachelor", List(Atom("john")))
-  val resultfc1 = query(derivedFacts, bachelorQuery)
-  println(s"bachelorQuery Result forwardChaining: $resultfc1")
-
-  val bachelorQuery2 = Compound("married", List(Atom("jim")))
-  val resultfc2 = query(derivedFacts, bachelorQuery2)
-  println(s"bachelorQuery Result forwardChaining: $resultfc2")
-  
-}
-
-def testAncestorQuery(rules: List[Rule]): Unit = {
-  val query = Compound("ancestor", List(Atom("john"), Variable("Y")))
-  val initialSubstitution: Substitution = Map()
-
-  // Perform resolution
-  val results = KnowledgeBase.solve(List(query), initialSubstitution)
-
-  // Output the results
-  results match {
-    case Nil => println("No solutions found.")
-    case solutions =>
-      println(s"Solutions: ancestor")
-      solutions.foreach(subst => println(s"  $subst"))
-  }
-}
-
-def testMotherQuery(rules: List[Rule]): Unit = {
-  val query = Compound("mother", List(Variable("X"), Atom("john")))
-  val initialSubstitution: Substitution = Map()
-
-  // Perform resolution
-  val results = KnowledgeBase.solve(List(query), initialSubstitution)
-
-  // Output the results
-  results match {
-    case Nil => println("No solutions found.")
-    case solutions =>
-      println(s"Solutions: mother")
-      solutions.foreach(subst => println(s"  $subst"))
-  }
-}
 
 def backwardChaining(
     query: Term,
     rules: List[Rule],
     facts: Set[Compound],
     visited: Set[Term] = Set()
-): Boolean = {
+)(using writer: PrinterWriter): Boolean = {
+  writer.println("-----------------------------------------------------------------")
+  writer.println(s"backwardChaining: $facts\n\t $visited")
+  writer.println("-----------------------------------------------------------------")
   // Prevent infinite loops
   if (visited.contains(query)) return false
 
@@ -230,87 +218,45 @@ def backwardChaining(
 }
 
 
-def forwardChaining(facts: Set[Compound], rules: List[Rule]): Set[Compound] = {
+def forwardChaining(facts: Set[Compound], rules: List[Rule])(using writer: PrinterWriter): Set[Compound] = {
+  writer.println("-----------------------------------------------------------------")
+  writer.println(s"forwardChaining: $facts")
+  writer.println("-----------------------------------------------------------------")
   val newFacts: Set[Compound] = rules.flatMap { rule =>
     // Check if the rule body is satisfied
     if rule.body.forall {
         case Not(innerQuery) =>
           // Negation: Succeeds if inner query fails
           val negationResult = !facts.exists(f => unify(innerQuery, f, Map()).isDefined)
-          //println(s"Negation for $innerQuery: $negationResult")
+          writer.println(s"Negation for $innerQuery: $negationResult")
           negationResult
         case subQuery =>
           // Normal query: Succeeds if it unifies with existing facts
           val positiveResult = facts.exists(f => unify(subQuery, f, Map()).isDefined)
-          //println(s"SubQuery $subQuery in facts: $positiveResult")
+          writer.println(s"SubQuery $subQuery in facts: $positiveResult")
           positiveResult
       } then
-      // Add the head of the rule if the body is satisfied
-      val unifiedFact = unify(rule.head, rule.head, Map()).map(_ => rule.head)
-      //println(s"Applying rule: $rule, Unified fact: $unifiedFact")
-      unifiedFact.toList
-    else Nil
+          // Add the head of the rule if the body is satisfied
+          val unifiedFact = unify(rule.head, rule.head, Map()).map(_ => rule.head)
+          writer.println(s"Applying rule: $rule, Unified fact: $unifiedFact")
+          unifiedFact.toList
+    else 
+      Nil
   }.toSet
 
   // If no new facts are derived, return the current set of facts
-  if (newFacts.subsetOf(facts)) facts
-  else forwardChaining(facts ++ newFacts, rules)
+  if (newFacts.subsetOf(facts)) 
+    writer.println("---------> No new facts end forward chaining <------------------")
+    facts
+  else 
+    forwardChaining(facts ++ newFacts, rules)
 }
 
 
-def validateQuery(query: Compound, facts: Set[Compound]): Boolean = {
+def validateQuery(query: Compound, facts: Set[Compound])(using writer: PrinterWriter): Boolean = {
   facts.exists(fact => unify(query, fact, Map()).isDefined)
 }
 
-def testForwardChaining(rules: List[Rule]) = {
-
-  val facts = Set(
-    Compound("male", List(Atom("john"))),
-    Compound("female", List(Atom("susan"))),
-    Compound("parent", List(Atom("john"), Atom("susan")))
-  )
-
-  val rules = List(
-    Rule(
-      Compound("mother", List(Variable("X"), Variable("Y"))),
-      List(
-        Compound("female", List(Variable("X"))),
-        Compound("parent", List(Variable("X"), Variable("Y")))
-      )
-    ),
-    Rule(
-      Compound("ancestor", List(Variable("X"), Variable("Y"))),
-      List(Compound("parent", List(Variable("X"), Variable("Y"))))
-    ),
-    Rule(
-      Compound("ancestor", List(Variable("X"), Variable("Y"))),
-      List(
-        Compound("parent", List(Variable("X"), Variable("Z"))),
-        Compound("ancestor", List(Variable("Z"), Variable("Y")))
-      )
-    ),
-     // "Not" Example: If X is not female, X is a bachelor
-    Rule(Compound("bachelor", List(Variable("X"))), List(
-      Compound("male", List(Variable("X"))),
-      Not(Compound("female", List(Variable("X"))))
-    ))
-  )
-
-  //val derivedFactsNot = forwardChainingWithNot(facts, rules)
-  val derivedFacts = forwardChaining(facts, rules)
-  println(s"derivedFacts $derivedFacts")
-  {
-    val query = Compound("ancestor", List(Atom("john"), Atom("susan")))
-    val result1 = validateQuery(query, derivedFacts)
-    println(s"Forward chaining Query result: $result1")
-  }
-
-  {
-    val query2 = Compound("mother", List(Atom("john"), Atom("susan")))
-    val result3 = validateQuery(query2, derivedFacts)
-    println(s"Forward chaining Query result2: $result3")
-  }
-}
 // Knowledge base to store rules
 object KnowledgeBase {
  val rules: List[Rule] = List(
@@ -333,22 +279,22 @@ object KnowledgeBase {
     Rule(Compound("ancestor", List(Variable("X"), Variable("Y"))), 
         List(Compound("parent", List(Variable("X"), Variable("Z"))), 
              Compound("cut", Nil), 
-             Compound("ancestor", List(Variable("Z"), Variable("Y")))))
-    /*
-    Rule(
-      Compound("ancestor", List(Variable("X"), Variable("Y"))),
-      List(
-        Compound("parent", List(Variable("X"), Variable("Z"))),
-        Compound("ancestor", List(Variable("Z"), Variable("Y")))
-      )
-    )*/
+             Compound("ancestor", List(Variable("Z"), Variable("Y"))))),
+    Rule(Compound("bachelor", List(Variable("X"))), List(
+      Compound("male", List(Variable("X"))),
+      Not(Compound("female", List(Variable("X"))))
+    )),
+    Rule(Compound("bachelor", List(Variable("X"))), List(
+      Compound("male", List(Variable("X"))),
+      Not(Compound("married", List(Variable("X"))))
+    ))
   )
 
-  def query(goal: Compound): List[Substitution] = 
+  def query(goal: Compound)(using writer: PrinterWriter): List[Substitution] = 
     val initialSubstitution: Substitution = Map()
     solve(List(goal), initialSubstitution)
 
-  def solve(goals: List[Term], subst: Substitution): List[Substitution] = {
+  def solve(goals: List[Term], subst: Substitution)(using writer: PrinterWriter): List[Substitution] = {
     writer.println("-----------------------------------------------------------------")
     writer.println(s"Solving goals: $goals with subst: $subst")
     writer.println("-----------------------------------------------------------------")
@@ -361,7 +307,7 @@ object KnowledgeBase {
         solve(rest,subst)
       case goal :: rest =>
         rules.flatMap { rule =>
-            //writer.println(s"Trying to unify goal: \n\t$goal with \n\trule: $rule")
+            writer.println(s"Trying to unify goal: \n\t$goal with \n\trule: $rule")
             unify(goal, rule.head, subst).toList.flatMap { unifiedSubst  =>
               writer.println(s"\n\n!!!!! Unified!!!!\n\n New subst: $unifiedSubst . Solving rule body: ${rule.body} and rest: $rest")
               val newGoals = rule.body.map(applySubstitution(_, unifiedSubst)) ++ rest
@@ -373,20 +319,38 @@ object KnowledgeBase {
   }
 }
 
-@main def runQuery(): Unit = {
-
-  testMotherQuery(KnowledgeBase.rules)
-  testAncestorQuery(KnowledgeBase.rules)
-  testForwardChaining(KnowledgeBase.rules)
-  testBachelorNotQuery()
-
+def saveRules(rules: List[Rule], file: File): Unit =
+  import io.circe.syntax._
+  import io.circe.yaml.syntax._
   
-  writer.println("-----------------------------------------------------------------")
-  //val query2 = Compound("mother", List(Variable("X"),Atom("John")))
-  val query2 = Compound("mother", List(Variable("X"), Atom("john")))
-  val results2 = KnowledgeBase.query(query2)
-  writer.println("Solution:")
-  results2.foreach(writer.println)
+  val yamlPrinter = Printer.spaces2
+  val yamlString = yamlPrinter.pretty(rules.asJson)
+  val writer = new PrintWriter(file)
+  try writer.write(yamlString)
+  finally writer.close()
+
+def loadRules(file: File): Either[io.circe.Error, List[Rule]] =
+    val yamlContent = Source.fromFile(file).mkString
+    parser.parse(yamlContent).flatMap(_.as[List[Rule]])
+
+
+
+
+
+
+@main def testRules() = 
+  val writer = new PrintWriter(ConfigReader.rulesEngineLogDirectory)
+  println(s"output is in this file ${ConfigReader.rulesEngineLogDirectory}")
+  val file = new File("rules.yaml")
+  saveRules(KnowledgeBase.rules,file)
+  val rules = loadRules(file) match {
+    case Right(loadedRules) => //println(s"loadedRules loaded: $loadedRules")
+      //testMotherQuery(loadedRules)
+      //testAncestorQuery(loadedRules)
+      //testForwardChaining(loadedRules)
+      //testBachelorNotQuery(loadedRules)
+    case Left(error)            => writer.println(s"Failed to load loadedRules: $error")
+      error
+  }
   writer.close()
-  //writer.println(s"Results: $results")
-}
+  

@@ -4,7 +4,7 @@ import scala.math.Integral.Implicits.infixIntegralOps
 import scala.math.Numeric.Implicits.infixNumericOps
 import scala.util.Using
 import java.io.PrintWriter
-
+import com.definerisk.core.models.{*,given}
 case class AccountData(accountName: String, grid: Grid)
 
 

@@ -1,3 +1,5 @@
+package com.definerisk.core.models
+
 import com.typesafe.config.{Config, ConfigFactory}
 
 object ConfigReader {

@@ -7,6 +7,14 @@ import java.io.PrintWriter
 import scala.math._
 import  com.definerisk.core.utils.PrettyPrinter.{*,given}
 import java.time.temporal.ChronoUnit
+
+
+trait PrinterWriter:
+  def println(s: String): Unit
+
+given PrinterWriter with
+  def println(s: String): Unit = System.out.println(s)
+
 //case class Underlying(symbol: String, price: BigDecimal, date: LocalDate)
 trait UnderlyingType[T <: TradeType]
 
