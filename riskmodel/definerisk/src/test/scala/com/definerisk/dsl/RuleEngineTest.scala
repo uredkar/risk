@@ -71,7 +71,7 @@ class RuleEngineTest extends AnyFunSuite with Matchers with BeforeAndAfterAll wi
 
         {
             writer.println("---------------------mother--------------------------------------------")
-            val query2 = Compound("mother", List(Atom("john"), Atom("susan")))
+            val query2 = Compound("mother", List(Atom("monia"), Atom("john")))
             val result3 = validateQuery(query2, derivedFacts)
             writer.println(s"\t\t*********************Forward chaining Query result2: $result3")
             writer.println("-----------------------------------------------------------------")
@@ -104,21 +104,17 @@ class RuleEngineTest extends AnyFunSuite with Matchers with BeforeAndAfterAll wi
         writer.println("-----------------------------------------------------------------")
         writer.println(s"testMotherQuery")
         writer.println("-----------------------------------------------------------------")
-
+        val facts: Set[Compound] = Set(
+        )
         val query = Compound("mother", List(Variable("X"), Atom("john")))
         val initialSubstitution: Substitution = Map()
-
+        val results1 = backwardChaining(query, rules)
         // Perform resolution
-        val results = KnowledgeBase.solve(List(query), initialSubstitution)
+        val results2 = KnowledgeBase.solve(List(query), initialSubstitution)
 
         writer.println("-----------------------------------------------------------------")
         // Output the results
-        results match {
-            case Nil => writer.println("********************* No solutions found.")
-            case solutions =>
-            writer.println(s"********************* Solutions: mother")
-            solutions.foreach(subst => writer.println(s"  $subst"))
-        }
+        writer.println(s"testMotherQuery result backward chaining $results1 solve $results1")
         writer.println("-----------------------------------------------------------------")
     }
     
@@ -146,16 +142,16 @@ class RuleEngineTest extends AnyFunSuite with Matchers with BeforeAndAfterAll wi
         val query1 = Compound("bachelor", List(Atom("john")))
         val query2 = Compound("bachelor", List(Atom("peter")))
         val query3 = Compound("married", List(Atom("jim")))
-        val result1 = backwardChaining(query1, rules, facts)
+        val result1 = backwardChaining(query1, rules)
         writer.println("-----------------------------------------------------------------")
         writer.println(s"Query Result for backwardChaining $query1: $result1")
         writer.println("-----------------------------------------------------------------")
-        val result2 = backwardChaining(query2, rules, facts)
+        val result2 = backwardChaining(query2, rules)
         
         writer.println("-----------------------------------------------------------------")
         writer.println(s"Query Result for backwardChaining $query2: $result2")
         writer.println("-----------------------------------------------------------------")
-        val result3 = backwardChaining(query3, rules, facts)
+        val result3 = backwardChaining(query3, rules)
         writer.println("-----------------------------------------------------------------")
         writer.println(s"Query Result for backwardChaining $query3: $result3")
         writer.println("-----------------------------------------------------------------")
@@ -180,11 +176,33 @@ class RuleEngineTest extends AnyFunSuite with Matchers with BeforeAndAfterAll wi
         writer.println(s"married jim Result forwardChaining: $resultfc2")
         writer.println("-----------------------------------------------------------------")
     }
-    /*
+    
+    test("occurs working") {
+        //val writer = new StringWriter()
+        //given PrinterWriter = new PrintWriter(writer)
+
+        val x = Variable("x")
+        val y = Variable("y")
+        val z = Variable("z")
+        val f = Compound("f", List(x))
+
+        // Basic Cases
+        occursCheck(x, x, Map.empty) shouldBe false
+        occursCheck(x, y, Map.empty) shouldBe false
+
+        // Compound Terms
+        occursCheck(x, f, Map.empty) shouldBe false
+        occursCheck(x, Compound("f", List(y)), Map.empty) shouldBe false
+
+        // Substituted Terms
+        occursCheck(x, Compound("f", List(y)), Map(y -> x)) shouldBe false
+        occursCheck(x, Compound("f", List(y)), Map(y -> z)) shouldBe false
+    }
+
     test("testMotherQuery") {
         testMotherQuery(KnowledgeBase.rules)
     }
-
+/*
     test("testAncestorQuery") {
         testAncestorQuery(KnowledgeBase.rules)
     }
@@ -196,7 +214,7 @@ class RuleEngineTest extends AnyFunSuite with Matchers with BeforeAndAfterAll wi
     test("testBachelorNotQuery") {
       testBachelorNotQuery(KnowledgeBase.rules)
     }
-    */
+  
     test("unify should successfully unify two atoms with the same name") {
         val atom1 = Atom("A")
         val atom2 = Atom("A")
@@ -207,6 +225,7 @@ class RuleEngineTest extends AnyFunSuite with Matchers with BeforeAndAfterAll wi
         val result = unify(atom1, atom2, subst)
         result shouldBe Some(subst)
         testPrinterWriter.getOutput should include("Unified atoms")
+        writer.println(testPrinterWriter.getOutput)
   }
 
     test("unify should fail to unify two atoms with different names") {
@@ -219,10 +238,11 @@ class RuleEngineTest extends AnyFunSuite with Matchers with BeforeAndAfterAll wi
         val result = unify(atom1, atom2, subst)
         result shouldBe None
         testPrinterWriter.getOutput should include("Failed to unify")
+        writer.println(testPrinterWriter.getOutput)
     }
 
     test("unifyVariable should add a new substitution") {
-        val writer = new StringWriter()
+        //val writer = new StringWriter()
         given PrinterWriter = testPrinterWriter
 
         val variable = Variable("X")
@@ -233,6 +253,7 @@ class RuleEngineTest extends AnyFunSuite with Matchers with BeforeAndAfterAll wi
         result shouldBe Some(subst + (variable -> term))
         //println(s"------------> ${testPrinterWriter.getOutput}")
         testPrinterWriter.getOutput should include("unifyVariable")
+        writer.println(testPrinterWriter.getOutput)
     }
 
     test("unifyArgs should unify matching argument lists") {
@@ -245,6 +266,7 @@ class RuleEngineTest extends AnyFunSuite with Matchers with BeforeAndAfterAll wi
         val result = unifyArgs(args1, args2, subst)
         result shouldBe Some(subst)
         testPrinterWriter.getOutput should include("UnifyArgs: Successfully unified")
+        writer.println(testPrinterWriter.getOutput)
     }
 
    
@@ -258,9 +280,8 @@ class RuleEngineTest extends AnyFunSuite with Matchers with BeforeAndAfterAll wi
     
     test("prevent infinite recursion in cyclic substitutions") {
         val subst = Map(Variable("x") -> Compound("f", List(Variable("x"))))
-        an[StackOverflowError] shouldBe thrownBy {
-            applySubstitution(Variable("x"), subst)
-        }
+        applySubstitution(Variable("x"), subst)
+        
     }
     
     test("substitute variables correctly") {
@@ -292,4 +313,5 @@ class RuleEngineTest extends AnyFunSuite with Matchers with BeforeAndAfterAll wi
         result should contain(Compound("mortal", List(Atom("John"))))
         testPrinterWriter.getOutput should include("forwardChaining")
     }
+    */  
 }

@@ -8,6 +8,17 @@ import scala.math._
 import  com.definerisk.core.utils.PrettyPrinter.{*,given}
 import java.time.temporal.ChronoUnit
 
+import scala.annotation.tailrec
+
+import io.circe.{Encoder, Decoder, Json}
+import io.circe.generic.semiauto._
+import io.circe.syntax._
+import io.circe.yaml.syntax._
+import io.circe.yaml.parser
+import io.circe.yaml.Printer
+import io.circe._
+import java.io.{File, FileWriter, PrintWriter}
+import scala.io.Source
 
 trait PrinterWriter:
   def println(s: String): Unit
@@ -234,3 +245,76 @@ given PrettyPrinter[Strategy] with
     s"End Strategy ----------------------\n"
 
 
+// Define the Term ADT
+sealed trait Term
+case class Atom(name: String) extends Term
+case class Variable(name: String) extends Term
+case class Compound(functor: String, args: List[Term]) extends Term
+case class Not(term: Term) extends  Term
+case class Cut(name: String) extends Term
+
+
+// Define rules and knowledge base
+sealed trait RuleBase
+case class Rule(head: Compound, body: List[Term]) extends RuleBase
+case class Fact(head: Term) extends RuleBase
+//case class Rule(head: Term, body: List[Term]) extends Rule
+// Substitution maps Variables to Terms
+type Substitution = Map[Variable, Term]
+
+// Encoders for Term
+
+given Encoder[Term] with
+  def apply(term: Term): Json = term match
+    case Atom(name) => Json.obj("Atom" -> Json.fromString(name))
+    case Variable(name) => Json.obj("Variable" -> Json.fromString(name))
+    case Compound(functor, args) =>
+      Json.obj(
+        "Compound" -> Json.obj(
+          "functor" -> Json.fromString(functor),
+          "args" -> Json.arr(args.map(Encoder[Term].apply)*)
+        )
+      )
+    case Not(innerQuery) =>
+      Json.obj(
+        "Not" -> Json.obj(
+          "innerQuery" -> Encoder[Term].apply(innerQuery)
+        )
+      )
+    case Cut(name) => Json.obj(
+      "Cut" -> Json.obj("Cut" -> Json.fromString(name))
+    )
+
+  // Decoder for Term
+given Decoder[Term] with
+  def apply(c: HCursor): Decoder.Result[Term] =
+    c.keys.flatMap(_.headOption) match
+      case Some("Atom")     => c.downField("Atom").as[String].map(Atom.apply)
+      case Some("Variable") => c.downField("Variable").as[String].map(Variable.apply)
+      case Some("Compound") =>
+        for
+          functor <- c.downField("Compound").downField("functor").as[String]
+          args <- c.downField("Compound").downField("args").as[List[Term]]
+        yield Compound(functor, args)
+      case Some("Not") =>
+        c.downField("Not").downField("innerQuery").as[Term].map(Not.apply)
+      case Some("Cut") => c.downField("Cut").as[String].map(Cut.apply)
+      case _ => Left(DecodingFailure("Unknown Term type", c.history))
+
+// Encoders and Decoders for other types
+given Encoder[Compound] = deriveEncoder[Compound]
+given Encoder[Not] = deriveEncoder[Not]
+given Encoder[Compound | Not] with
+  def apply(value: Compound | Not): Json = value match
+    case c: Compound => Encoder[Compound].apply(c)
+    case n: Not      => Encoder[Not].apply(n)
+
+given Decoder[Compound] = deriveDecoder[Compound]
+given Decoder[Not] = deriveDecoder[Not]
+given Decoder[Compound | Not] with
+  def apply(c: HCursor): Decoder.Result[Compound | Not] =
+    if c.keys.exists(_.mkString.contains("functor")) then Decoder[Compound].apply(c)
+    else Decoder[Not].apply(c)
+
+given Encoder[Rule] = deriveEncoder[Rule]
+given Decoder[Rule] = deriveDecoder[Rule]

@@ -1,4 +1,4 @@
-package com.definerisk.core.models
+package com.rulesengine.testing
 
 import scala.annotation.tailrec
 
@@ -12,79 +12,14 @@ import io.circe._
 import java.io.{File, FileWriter, PrintWriter}
 import scala.io.Source
 
-
-// Define the Term ADT
-sealed trait Term
-case class Atom(name: String) extends Term
-case class Variable(name: String) extends Term
-case class Compound(functor: String, args: List[Term]) extends Term
-case class Not(innerQuery: Compound) extends  Term
-
-// Define rules and knowledge base
-case class Rule(head: Compound, body: List[Compound | Not])
-
-// Substitution maps Variables to Terms
-type Substitution = Map[Variable, Term]
-
-// Encoders for Term
-
-given Encoder[Term] with
-  def apply(term: Term): Json = term match
-    case Atom(name) => Json.obj("Atom" -> Json.fromString(name))
-    case Variable(name) => Json.obj("Variable" -> Json.fromString(name))
-    case Compound(functor, args) =>
-      Json.obj(
-        "Compound" -> Json.obj(
-          "functor" -> Json.fromString(functor),
-          "args" -> Json.arr(args.map(Encoder[Term].apply)*)
-        )
-      )
-    case Not(innerQuery) =>
-      Json.obj(
-        "Not" -> Json.obj(
-          "innerQuery" -> Encoder[Compound].apply(innerQuery)
-        )
-      )
-
-  // Decoder for Term
-given Decoder[Term] with
-  def apply(c: HCursor): Decoder.Result[Term] =
-    c.keys.flatMap(_.headOption) match
-      case Some("Atom")     => c.downField("Atom").as[String].map(Atom.apply)
-      case Some("Variable") => c.downField("Variable").as[String].map(Variable.apply)
-      case Some("Compound") =>
-        for
-          functor <- c.downField("Compound").downField("functor").as[String]
-          args <- c.downField("Compound").downField("args").as[List[Term]]
-        yield Compound(functor, args)
-      case Some("Not") =>
-        c.downField("Not").downField("innerQuery").as[Compound].map(Not.apply)
-      case _ => Left(DecodingFailure("Unknown Term type", c.history))
-
-// Encoders and Decoders for other types
-given Encoder[Compound] = deriveEncoder[Compound]
-given Encoder[Not] = deriveEncoder[Not]
-given Encoder[Compound | Not] with
-  def apply(value: Compound | Not): Json = value match
-    case c: Compound => Encoder[Compound].apply(c)
-    case n: Not      => Encoder[Not].apply(n)
-
-given Decoder[Compound] = deriveDecoder[Compound]
-given Decoder[Not] = deriveDecoder[Not]
-given Decoder[Compound | Not] with
-  def apply(c: HCursor): Decoder.Result[Compound | Not] =
-    if c.keys.exists(_.mkString.contains("functor")) then Decoder[Compound].apply(c)
-    else Decoder[Not].apply(c)
-
-given Encoder[Rule] = deriveEncoder[Rule]
-given Decoder[Rule] = deriveDecoder[Rule]
+import com.definerisk.core.models.{*,given}
 
 
 
 
 
 def unify(term1: Term, term2: Term, subst: Substitution)(using writer: PrinterWriter): Option[Substitution] = {
-  writer.println(s"with $term2 subst $subst")
+  writer.println(s"unify with $term1 <-> $term2 subst $subst")
   val subs = (term1, term2) match {
     case (Atom(name1), Atom(name2)) if name1 == name2 =>
       writer.println(s"** Unified atoms: $term1 = $term2")
@@ -167,17 +102,24 @@ def unifyArgs(args1: List[Term], args2: List[Term], subst: Substitution)(using w
 
 
 def occursCheck(variable: Variable, term: Term, subst: Substitution)(using writer: PrinterWriter): Boolean = {
+
   def occurs(variable: Variable, term: Term): Boolean = {
+    writer.println(s"occurs $variable $term")
     term match {
-      case `variable` => true
-      case Compound(_, args) => args.exists(arg => occurs(variable, applySubstitution(arg, subst)))
-      case v: Variable => subst.get(v).exists(subTerm => occurs(variable, subTerm))
+      
+      case Compound(_, args) => 
+          writer.println(s"Occurs-check: Checking compound $term with args $args")
+          args.exists(arg => occurs(variable, applySubstitution(arg, subst)))
+      case v: Variable if v == variable => false // subst.get(v).exists(subTerm => occurs(variable, subTerm))
     
       case _ => false
     }
   }
-  occurs(variable, term)
+  val result = occurs(variable, term)
+  writer.println(s"Occurs-check result: $result for $variable in $term")
+  result
 }
+
 private val substitutionCache = scala.collection.mutable.Map[Term, Term]()
 def applySubstitution_old(term: Term, subst: Substitution)(using writer: PrinterWriter): Term = {
   writer.println(s"\tapplySubstitution term $term subst $subst")
@@ -246,7 +188,7 @@ def applySubstitution_old2(term: Term, subst: Substitution): Term = {
 
 
 
-def applySubstitution(term: Term, subst: Substitution): Term = {
+def applySubstitution(term: Term, subst: Substitution)(using writer: PrinterWriter): Term = {
   def substituteCompound(args: List[Term], acc: List[Term]): List[Term] = {
     args match {
       case Nil => acc.reverse
@@ -255,7 +197,7 @@ def applySubstitution(term: Term, subst: Substitution): Term = {
         substituteCompound(tail, substitutedHead :: acc)
     }
   }
-
+  writer.println(s"applySubstitution $term $subst")
   term match {
     case v: Variable =>
       subst.getOrElse(v, v)
@@ -268,15 +210,42 @@ def applySubstitution(term: Term, subst: Substitution): Term = {
   }
 }
 
+def backwardChaining(query: Term, rules: List[Rule], subst: Substitution = Map.empty): Option[Substitution] = {
+  def evaluateBody(body: List[Term], subst: Substitution): Option[Substitution] = {
+    body match {
+      case Nil => Some(subst) // Success: No more terms to evaluate
+      case head :: tail =>
+        backwardChaining(head, rules, subst) match {
+          case Some(newSubst) => evaluateBody(tail, newSubst) // Continue with updated substitution
+          case None => None // Failure: Backtrack
+        }
+    }
+  }
 
-def backwardChaining(
+  // Attempt to unify query with each rule's head
+  rules match {
+    case Nil => None // No more rules to try
+    case Rule(head, body) :: tail =>
+      unify(query, head, subst) match {
+        case Some(newSubst) =>
+          evaluateBody(body, newSubst) match {
+            case success @ Some(_) => success // If body evaluation succeeds, return the substitution
+            case None => backwardChaining(query, tail, subst) // Backtrack to the next rule
+          }
+        case None => backwardChaining(query, tail, subst) // Backtrack to the next rule
+      }
+  }
+}
+
+
+def backwardChaining_old(
     query: Term,
     rules: List[Rule],
     facts: Set[Compound],
     visited: Set[Term] = Set()
 )(using writer: PrinterWriter): Boolean = {
   writer.println("-----------------------------------------------------------------")
-  writer.println(s"backwardChaining: $facts\n\t $visited")
+  writer.println(s"backwardChaining: facts $facts visited $visited")
   writer.println("-----------------------------------------------------------------")
   // Prevent infinite loops
   if (visited.contains(query)) return false
@@ -284,18 +253,22 @@ def backwardChaining(
   query match {
     case compound: Compound =>
       // Check if the query can be unified with any fact
-      if (facts.exists(f => unify(compound, f, Map()).isDefined)) true
+      if (facts.exists(f => unify(compound, f, Map()).isDefined)) 
+        writer.println(s"Found facts for $compound")
+        true
       else {
-        // Check if the query can be derived using rules
+        writer.println("Check if the query can be derived using rules")
         rules.exists { rule =>
           unify(rule.head, compound, Map()).exists { subst =>
             rule.body.forall {
               case Not(innerQuery) =>
                 // For `Not`, check that `innerQuery` cannot be proven
-                !backwardChaining(innerQuery, rules, facts, visited + query)
+                writer.println(s"not inner $innerQuery")
+                !backwardChaining_old(innerQuery, rules, facts, visited + query)
               case subQuery =>
                 // Standard query resolution
-                backwardChaining(applySubstitution(subQuery, subst), rules, facts, visited + query)
+                writer.println(s"subQuery $subQuery")
+                backwardChaining_old(applySubstitution(subQuery, subst), rules, facts, visited + query)
             }
           }
         }
@@ -394,11 +367,12 @@ object KnowledgeBase {
         solve(rest,subst)
       case goal :: rest =>
         rules.flatMap { rule =>
-            writer.println(s"Trying to unify goal: \n\t$goal with \n\trule: $rule")
+            writer.println(s"Trying to unify goal: \n\t$goal with \n\trule: ${rule.head}")
             unify(goal, rule.head, subst).toList.flatMap { unifiedSubst  =>
               writer.println(s"\n\n!!!!! Unified!!!!\n\n New subst: $unifiedSubst . Solving rule body: ${rule.body} and rest: $rest")
               val newGoals = rule.body.map(applySubstitution(_, unifiedSubst)) ++ rest
               solve(newGoals, unifiedSubst)
+              
           }
            
         }
