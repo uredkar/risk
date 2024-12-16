@@ -1,177 +1,214 @@
 import com.definerisk.core.models.{*,given }
+type Substitution = Map[Variable, Term]
 
-class RulesEngine {
-    var facts: Set[Term] = Set.empty // Stores known facts
-    var rules: List[Rule] = List(
-        Rule(Compound("male", List(Atom("john"))), Nil),
-        Rule(Compound("male", List(Atom("peter"))), Nil),
-        Rule(Compound("male", List(Atom("paul"))), Nil),
-        Rule(Compound("married", List(Atom("paul"),Atom("paulina"))), Nil),
-        
-        
-        Rule(Compound("husband", List(Variable("X"),Variable("Y"))), List(
-            Compound("male", List(Variable("X"))),
-            Compound("married",List(Variable("X"),(Variable("Y"))))
-        ))
-    )
+var rules: List[Rule] = List(
+    Rule(Compound("male", List(Atom("john"))), Nil),
+    Rule(Compound("male", List(Atom("peter"))), Nil),
+    Rule(Compound("male", List(Atom("paul"))), Nil),
+    Rule(Compound("female", List(Atom("jenny"))), Nil),
+    Rule(Compound("female", List(Atom("jen"))), Nil),
+    Rule(Compound("female", List(Atom("granny"))), Nil),
+    Rule(Compound("parent", List(Atom("jen"),Atom("jenny"))), Nil),
+    Rule(Compound("parent", List(Atom("granny"),Atom("jen"))), Nil),
+    Rule(Compound("married", List(Atom("paul"),Atom("paulina"))), Nil),
 
-    // Add a fact to the engine
-    def addFact(fact: Term): Unit = {
-        facts += fact
-    }
+    Rule(Compound("grandmother", List(Variable("X"), Variable("Y"))), 
+        List(Compound("female", List(Variable("X"))),
+            Compound("parent", List(Variable("X"),Variable("Z"))),
+            Compound("parent", List(Variable("Z"),Variable("Y"))))),
 
-    // Add a rule to the engine
-    def addRule(rule: Rule): Unit = {
-        rules = rules :+ rule
-    }
+    Rule(Compound("mother", List(Variable("X"), Variable("Y"))), 
+        List(Compound("female", List(Variable("X"))),
+        Compound("parent", List(Variable("X"),Variable("Y"))))),
 
-    def substitute(term: Term, subst: Substitution): Term = term match {
-        case v: Variable => subst.getOrElse(v, v)
-        case Compound(f, args) => Compound(f, args.map(arg => substitute(arg, subst)))
-        case _ => term
-    }
+    Rule(Compound("ancestor", List(Variable("X"), Variable("Y"))), List(Compound("parent", List(Variable("X"), Variable("Y"))))),
 
+    Rule(Compound("ancestor", List(Variable("X"), Variable("Y"))), 
+        List(Compound("parent", List(Variable("X"), Variable("Z"))), 
+            Compound("cut", Nil), 
+            Compound("ancestor", List(Variable("Z"), Variable("Y"))))),
+
+    Rule(Compound("bachelor", List(Variable("X"))), List(
+                Compound("male", List(Variable("X"))),
+                Compound("not", List(Compound("married", List(Variable("X"), Variable("_")))))
+            )),
+    Rule(Compound("husband", List(Variable("X"),Variable("Y"))), List(
+        Compound("male", List(Variable("X"))),
+        Compound("married",List(Variable("X"),(Variable("Y"))))))
+)
+    
+    
+object Unification {
     def unify(x: Term, y: Term, subst: Substitution): Option[Substitution] = 
-        
-        val ns = (x, y) match {
-            case (a1: Atom, a2: Atom) if a1 == a2 => Some(subst)
-            case (v: Variable, t) => unifyVariable(v, t, subst)
-            case (t, v: Variable) => unifyVariable(v, t, subst)
-            case (Compound(f1, args1), Compound(f2, args2)) if f1 == f2 =>
+        //println(s"unify $x $y $subst")
+        (x, y) match {
+            case (a1: Atom, a2: Atom) if a1 == a2 =>
+                Some(subst) // Atoms match
+            case (v: Variable, t) =>
+                unifyVariable(v, t, subst)
+            case (t, v: Variable) =>
+                unifyVariable(v, t, subst)
+            case (Compound(f1, args1), Compound(f2, args2)) if f1 == f2 && args1.size == args2.size =>
                 unifyArgs(args1, args2, subst)
-            case _ => None
-        }
-        //println(s"unify $x <-> $y  subst $subst ns $ns")
-        ns
+            case _ =>
+                None // No match
+    }
 
     def unifyVariable(v: Variable, t: Term, subst: Substitution): Option[Substitution] = {
-        if (t == v) Some(subst)
-        else if (occursCheck(v, t, subst)) None
-        else Some(subst + (v -> t))
+        subst.get(v) match {
+            case Some(value) =>
+                // `v` already has a substitution, unify the substitution value with `t`
+                println(s"Variable $v already has substitution: $value. Attempting to unify with $t.")
+                unify(value, t, subst)
+
+            case None =>
+                t match {
+                    case Variable(_) if subst.contains(t.asInstanceOf[Variable]) =>
+                        // `t` is a variable that already has a substitution; resolve it recursively
+                        val resolved = subst(t.asInstanceOf[Variable])
+                        println(s"Resolving other variable $t (substituted as $resolved) to prevent circular substitution.")
+                        unify(v, resolved, subst)
+
+                    case _ if occursCheck(v, t, subst) =>
+                        // Occurs check: prevent circular substitutions
+                        println(s"Occurs check failed for variable $v in term $t. Unification aborted.")
+                        None
+
+                    case _ =>
+                        // Add a new substitution
+                        println(s"Adding new substitution: $v -> $t.")
+                        Some(subst + (v -> t))
+                }
+        }
     }
 
-    def unifyArgs(args1: List[Term], args2: List[Term], subst: Substitution): Option[Substitution] = {
+    
+    def occursCheck(v: Variable, t: Term, subst: Substitution): Boolean = t match {
+        case `v` =>
+            true // Variable can unify with itself (no circular reference)
+        case Compound(_, args) =>
+            args.exists(arg => occursCheck(v, arg, subst)) // Check recursively for cycles in compound terms
+        case other: Variable =>
+            // Check the substitution of `other` variable (if it exists) recursively
+            subst.get(other).exists(resolved => occursCheck(v, resolved, subst))            
+        //case Variable(_) => subst.get(t.asInstanceOf[Variable]).exists(occursCheck(v, _, subst)) // Check substitutions
+        case _ => false
+    }
+
+    def unifyArgs(args1: List[Term], args2: List[Term], subst: Substitution): Option[Substitution] =
+        //println(s"unifyArgs $args1 $args2 $subst")
         (args1, args2) match {
-        case (Nil, Nil) => Some(subst)
-        case (a1 :: rest1, a2 :: rest2) =>
-            unify(a1, a2, subst).flatMap(unifyArgs(rest1, rest2, _))
-        case _ => None
+            case (Nil, Nil) => Some(subst)
+            case (head1 :: tail1, head2 :: tail2) =>
+                unify(head1, head2, subst).flatMap(newSubst => unifyArgs(tail1, tail2, newSubst))
+            case _ => None
         }
-    }
-
-    def occursCheck(v: Variable, t: Term, subst: Substitution): Boolean = {
-        def occurs(term: Term): Boolean = term match {
-            case `v` => true
-            case Compound(_, args) => args.exists(occurs)
-            case _ => false
-        }
-        occurs(substitute(t, subst))
-    }
-    // Resolve a goal against facts and rules
-    def resolve(goal: Term, subst: Substitution = Map(),visited: Set[Substitution]): List[Substitution] = {
-        println(s"\n\nresolve $goal")
-        //resolveFact(goal, subst) ::: 
-        resolveRules(goal, subst,visited)
-    }
-
-    // Resolve a goal directly against known facts
-    def resolveFact(goal: Term, subst: Substitution): List[Substitution] = {
-        println("resolveFact")
-        facts.collect {
-            case fact if unify(goal, fact, subst).isDefined => unify(goal, fact, subst).get
-        }.to(List)
-    }
-
-    // Resolve a goal using rules
-    def resolveRules(goal: Term, subst: Substitution,visited: Set[Substitution]): List[Substitution] = {
-        println(s"\tresolveRules goal $goal subst $subst")
-        rules.to(List).flatMap {
-            case Rule(head, body) =>
-                println(s"\t->head $head")
-                val ns = unify(goal, head, subst) 
-                //println(s"resolveRules $ns")
-                ns match {
-                    case None =>
-                        //println(s"Rule head does not unify: $head")
-                        List.empty
-                    case Some(newSubst) =>
-                        val combinedSubst = newSubst ++ subst
-                        println(s"\t->>>>>>Rule head unified: $head -> Subst: $newSubst")
-                        if (!visited.contains(combinedSubst))
-                            resolveGoals(body, newSubst,visited+newSubst)
-                        else LazyList.empty
-                }
-        }
-    }
-
-    // Resolve a list of goals
-    def resolveGoals(goals: List[Term], subst: Substitution,visited: Set[Substitution]): List[Substitution] = 
-        println(s"\t\tResolving goals: $goals under substitution $subst")
-        goals match {
-            case Nil => List(subst)
-            case Cut :: _ => List(subst) // Stop backtracking when encountering a cut
-            case Not(goal) :: rest =>
-                println(s"\t\tnot $goal")
-                resolve(goal, subst,visited+subst) match {
-                    case List() => 
-                        println("\t\tgoal cannot be proven")
-                        resolveGoals(rest, subst,visited+subst) // `goal` cannot be proven, continue
-                    case other => 
-                        println(s"\n\t\tNot Fails Success $other")
-                        List.empty // `goal` is proven, `not` fails
-                }
-            case goal :: rest =>
-                //resolve(goal, subst,visited).flatMap(s => resolveGoals(rest, s,visited))
-                resolve(goal, subst, visited+subst).flatMap { newSubst =>
-                    if (!visited.contains(newSubst))
-                        resolveGoals(rest, newSubst, visited + newSubst)
-                    else LazyList.empty
-                }
-
-    }
-
-    // Perform forward chaining to deduce new facts
-    def forwardChain(): Unit = {
-        var newFacts = Set.empty[Term]
-        var updated = true
-        val visited: Set[Substitution] =  Set.empty[Substitution]
-        while (updated) {
-        updated = false
-        for (Rule(head, body) <- rules) {
-            resolveGoals(body, Map.empty,visited).foreach { subst =>
-            val resolvedHead = substitute(head, subst)
-            if (!facts.contains(resolvedHead)) {
-                newFacts += resolvedHead
-                updated = true
-            }
-            }
-        }
-        facts ++= newFacts
-        }
-    }
 }
 
-@main def TestSimpleRule = {
-    { // simple
-        val engine = new RulesEngine()
-        val subst = Map.empty[Variable, Term]
-        val result = engine.unify(Variable("X"), Atom("a"), subst)
-        println(s"Result simple: $result") // Should output: Map(Variable("X") -> Atom("a"))
+object RulesEngine {
+    var facts: Set[Term] = Set.empty // Stores known facts
+    
+    private var variableCounter = 0
+    def resolve(goal: Term, rules: List[Rule], visited: Set[(Term, Substitution)], subst: Substitution): List[Substitution] = {
+        if (visited.contains((goal, subst))) {
+            Nil // Avoid revisiting the same goal with the same substitution
+        } else {
+            val newVisited = visited + ((goal, subst)) // Track current goal and substitution
+            rules.flatMap { rule =>
+                val renamedRule = renameVariables(rule) // Rename variables in the rule
+                Unification.unify(goal, renamedRule.head, subst) match {
+                    case Some(unifiedSubst) =>
+                        resolveAll(renamedRule.body, rules, newVisited, unifiedSubst) // Explore body
+                    case None =>
+                        Nil // Unification failed
+                }
+            }
+        }
     }
-    { // compound
-        val engine = new RulesEngine()
-        val subst = Map.empty[Variable, Term]
-        val term1 = Compound("parent", List(Variable("X"), Atom("b")))
-        val term2 = Compound("parent", List(Atom("a"), Atom("b")))
-        val result = engine.unify(term1, term2, subst)
-        println(s"Result Compound: $result") // Should output: Map(Variable("X") -> Atom("a"))
+
+    def resolveAll(goals: List[Term], rules: List[Rule], visited: Set[(Term, Substitution)], subst: Substitution): List[Substitution] = {
+        goals match {
+            case Nil =>
+                List(subst) // All goals resolved successfully
+            case Compound("not", List(term)) :: tail =>
+                if (not(term, rules, subst)) {
+                    resolveAll(tail, rules, visited, subst) // Negation succeeded
+                } else {
+                    Nil // Negation failed
+                }
+            case head :: tail =>
+                resolve(head, rules, visited, subst).flatMap(newSubst =>
+                    resolveAll(tail, rules, visited, newSubst) // Continue resolving remaining goals
+                )
+        }
     }
     
+    def not(goal: Term, rules: List[Rule], subst: Substitution): Boolean = {
+        goal match {
+            case compoundGoal: Compound =>
+                // Evaluate the goal and negate its result
+                val results = resolve(compoundGoal, rules, Set.empty, subst)
+                results.isEmpty // Negation succeeds if no results exist
+            case _ =>
+                throw new IllegalArgumentException(s"Negation is only supported for Compound terms, found: $goal")
+        }
+    }
+
+
+    
+
+    
+    def forwardChain(rules: List[Rule]): Set[Term] = {
+        var facts: Set[Term] = rules.filter(_.body.isEmpty).map(_.head).toSet
+        var newFacts: Set[Term] = Set.empty
+
+        var keepRunning = true
+        while (keepRunning) {
+        newFacts = rules.flatMap {
+            case Rule(head, body) if body.forall(facts.contains) => Some(head)
+            case _ => None
+        }.toSet -- facts
+
+        if (newFacts.isEmpty) keepRunning = false
+        facts ++= newFacts
+        }
+
+        facts
+    }
+
+    def renameVariables(rule: Rule): Rule = {
+        val renaming = scala.collection.mutable.Map[Variable, Variable]()
+        def rename(term: Term): Term = term match {
+            case v: Variable =>
+                renaming.getOrElseUpdate(v, {
+                    variableCounter += 1
+                    Variable(s"${v.name}_${variableCounter}")
+                })
+            case Compound(functor, args) =>
+                Compound(functor, args.map(rename))
+            case other => other
+        }
+
+        Rule(rename(rule.head).asInstanceOf[Compound], rule.body.map(rename))
+    }
 }
+
 
 @main def TestComplexRule() = {
     val visited: Set[Substitution] =  Set.empty[Substitution]
-    val engine = new RulesEngine()
+    import RulesEngine._
+    val x = Variable("x")
+    val y = Variable("y")
+    val z = Variable("z")
+    val f = Compound("f", List(x))
+    Unification.unifyVariable(Variable("X"), Variable("X")  , Map.empty)
+    val b0 = Unification.occursCheck(Variable("X"), Variable("X")  , Map.empty) 
+    println(s"b0 $b0")
+        // Basic Cases
+    val b1 = Unification.occursCheck(x, x, Map.empty) 
+    println(s"b1 $b1")
+    val b2 = Unification.occursCheck(x, y, Map.empty)
+    println(s"b2 $b2")
     /*
     // Add facts
     engine.addFact(Atom("rain"))
@@ -198,72 +235,75 @@ class RulesEngine {
     */  
     //val query3 = Compound("married", List(Atom("jim")))
     println("==========================================")
-    println("Testing Who is husband:")
-    engine.resolve(Compound("husband", List(Variable("X"),Variable("paulina"))),visited = visited).foreach { result =>
+    println("Testing Who is husband of paulina: should be paul")
+    resolve(Compound("husband", List(Variable("H"),Atom("paulina"))),rules,Set.empty, Map.empty ).foreach { result =>
         println(s"\n\nResult husband ---------------: $result")
+    }
+    println("==========================================")
+
+    println("==========================================")
+    println("Testing Who is mother of jenny: should be jen")
+    resolve(Compound("mother", List(Variable("M"),Atom("jenny"))),rules,Set.empty, Map.empty).foreach { result =>
+        println(s"\n\nResult mother ---------------: $result")
+    }
+    println("==========================================")
+    
+    println("==========================================")
+    println("Testing Who is grandmother jenny should be granny")
+    resolve(Compound("grandmother", List(Variable("GM"),Atom("jenny"))),rules,Set.empty, Map.empty).foreach { result =>
+        println(s"\n\nResult grandmother ---------------: $result")
     }
     println("==========================================")
         
 }
-object TestRuleEngine {
-    @main def main = {
-        def forward1() = {
-            val engine = new RulesEngine
 
-            // Facts
-            engine.addFact(Atom("rain"))
-            engine.addFact(Compound("hasUmbrella", List(Atom("john"))))
-            engine.addFact(Atom("storm"))
+@main def testRuleEngineSimple =
+    import RulesEngine._
 
-            // Rules
-            //engine.addRule(Rule(Compound("wet", List(Atom("john"))), List(Atom("rain"), Compound("outside", List(Atom("john"))))))
-            engine.addRule(Rule(Compound("wet", List(Atom("john"))), List(Atom("rain"), Compound("outside", List(Atom("john"))))))
-
-            engine.addRule(Rule(Compound("safe", List(Atom("john"))), List(Compound("hasUmbrella", List(Atom("john"))))))
-            engine.addRule(Rule(Compound("outside", List(Atom("john"))), List(Atom("rain"))))
-            engine.addRule(Rule(Compound("dry", List(Atom("john"))), List(Not(Atom("rain")))))
-
-            // Forward Chaining
-            println("=== Forward Chaining ===")
-            engine.forwardChain()
-            println("Facts after forward chaining:")
-            engine.facts.foreach(println)
-        }
-
+    val rules = List(
+        Rule(Compound("male", List(Atom("john"))), Nil),
+        Rule(Compound("male", List(Atom("peter"))), Nil),
+        Rule(Compound("male", List(Atom("paul"))), Nil),
+        Rule(Compound("married", List(Atom("paul"), Atom("paulina"))), Nil),
         
+        Rule(Compound("bachelor", List(Variable("X"))), List(
+                Compound("male", List(Variable("X"))),
+                Compound("not", List(Compound("married", List(Variable("X"), Variable("_")))))))
+    )
+    /*
+    val x = Unification.unify(Atom("a"), Atom("a"), Map()) // Should return Some(Map())
+    println(x)
+    val y = Unification.unify(Atom("a"), Atom("b"), Map()) // Should return None
+    println(y)
+    val z = Unification.unify(Variable("X"), Atom("a"), Map()) 
+    println(z)
+    val a = Unification.unify(Variable("X"), Variable("Y"), Map())
+    println(a)
+    val c = Unification.unify(Variable("X"), Compound("f", List(Variable("X"))), Map()) // Should return None
+    println(c)
+    val comp = Unification.unify(
+                    Compound("f", List(Atom("a"), Variable("X"))),
+                    Compound("f", List(Atom("a"), Atom("b"))),
+                    Map()
+                ) 
+    println(s"comp ===== $comp")
 
-        def negation() = {
-            val visited: Set[Substitution] = Set.empty[Substitution]
-            val engine = new RulesEngine()
-            // Negative Goal
-            println("\n=== Negation ===")
-            val negGoal = Compound("dry", List(Atom("john")))
-            if (engine.resolve(negGoal,visited = visited).isEmpty) {
-                println(s"$negGoal cannot be proven")
-            }
-        }
+    val comnest = Unification.unify(
+                    Compound("f", List(Variable("X"), Compound("g", List(Variable("Y"))))),
+                    Compound("f", List(Atom("a"), Compound("g", List(Atom("b"))))),
+                    Map()
+                    )   
+    println(s"comnest == $comnest")
+    */
 
-        def moreback() = {
-            val visited: Set[Substitution] = Set.empty[Substitution]
-            val engine = new RulesEngine()
+    val query = Compound("bachelor", List(Variable("X")))
+    val results = resolve(query, rules, Set.empty, Map.empty)
 
-            // Add facts
-            engine.addFact(Atom("rain"))
-            engine.addFact(Compound("outside", List(Atom("john"))))
-
-            // Add rules
-            engine.addRule(Rule(Compound("wet", List(Atom("john"))), List(Atom("rain"), Compound("outside", List(Atom("john"))))))
-            engine.addRule(Rule(Compound("dry", List(Atom("john"))), List(Not(Atom("rain")))))
-
-            // Test backward chaining
-            println("Testing wet(john):")
-            engine.resolve(Compound("wet", List(Atom("john"))),visited = visited).foreach(println)
-
-            println("Testing dry(john):")
-            engine.resolve(Compound("dry", List(Atom("john"))),visited = visited).foreach(println)
-
-        }
-
-        
-    }
-}
+    println("Results========bachelor===================")
+    results.map(r => println(s"results $r"))
+    println("Results===========================")
+    /*
+    val forwardFacts = forwardChain(rules)
+    println("Forward Chaining Facts:")
+    forwardFacts.foreach(println)
+    */
