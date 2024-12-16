@@ -5,13 +5,15 @@ var rules: List[Rule] = List(
     Rule(Compound("male", List(Atom("john"))), Nil),
     Rule(Compound("male", List(Atom("peter"))), Nil),
     Rule(Compound("male", List(Atom("paul"))), Nil),
+    Rule(Compound("male", List(Atom("vick"))), Nil),
     Rule(Compound("female", List(Atom("jenny"))), Nil),
     Rule(Compound("female", List(Atom("jen"))), Nil),
     Rule(Compound("female", List(Atom("granny"))), Nil),
     Rule(Compound("parent", List(Atom("jen"),Atom("jenny"))), Nil),
     Rule(Compound("parent", List(Atom("granny"),Atom("jen"))), Nil),
     Rule(Compound("married", List(Atom("paul"),Atom("paulina"))), Nil),
-
+    Rule(Compound("married", List(Atom("vick"),Atom("victoria"))), Nil),
+    
     Rule(Compound("grandmother", List(Variable("X"), Variable("Y"))), 
         List(Compound("female", List(Variable("X"))),
             Compound("parent", List(Variable("X"),Variable("Z"))),
@@ -194,116 +196,55 @@ object RulesEngine {
 }
 
 
-@main def TestComplexRule() = {
+@main def testBackWardChaining() = {
     val visited: Set[Substitution] =  Set.empty[Substitution]
     import RulesEngine._
-    val x = Variable("x")
-    val y = Variable("y")
-    val z = Variable("z")
-    val f = Compound("f", List(x))
-    Unification.unifyVariable(Variable("X"), Variable("X")  , Map.empty)
-    val b0 = Unification.occursCheck(Variable("X"), Variable("X")  , Map.empty) 
-    println(s"b0 $b0")
-        // Basic Cases
-    val b1 = Unification.occursCheck(x, x, Map.empty) 
-    println(s"b1 $b1")
-    val b2 = Unification.occursCheck(x, y, Map.empty)
-    println(s"b2 $b2")
-    /*
-    // Add facts
-    engine.addFact(Atom("rain"))
-    engine.addFact(Compound("outside", List(Atom("john"))))
-
-    // Add rules
-    engine.addRule(Rule(Compound("wet", List(Atom("john"))), List(Atom("rain"), Compound("outside", List(Atom("john"))))))
-    engine.addRule(Rule(Compound("dry", List(Atom("john"))), List(Not(Atom("rain")))))
-
-    // Test backward chaining
-    println("==========================================")
-    println("Testing wet(john):")
-    engine.resolve(Compound("wet", List(Variable("X")))).foreach { result =>
-        println(s"\n\nResult Wet---------------: $result")
-    }
-    println("==========================================")
     
-    println("==========================================")
-    println("Testing dry(john):")
-    engine.resolve(Compound("dry", List(Variable("X")))).foreach { result =>
-        println(s"\n\nResult Should not see this -----------------------: $result")
-    }
-    println("==========================================")
-    */  
-    //val query3 = Compound("married", List(Atom("jim")))
-    println("==========================================")
-    println("Testing Who is husband of paulina: should be paul")
-    resolve(Compound("husband", List(Variable("H"),Atom("paulina"))),rules,Set.empty, Map.empty ).foreach { result =>
-        println(s"\n\nResult husband ---------------: $result")
-    }
-    println("==========================================")
-
-    println("==========================================")
-    println("Testing Who is mother of jenny: should be jen")
-    resolve(Compound("mother", List(Variable("M"),Atom("jenny"))),rules,Set.empty, Map.empty).foreach { result =>
-        println(s"\n\nResult mother ---------------: $result")
-    }
-    println("==========================================")
-    
-    println("==========================================")
-    println("Testing Who is grandmother jenny should be granny")
-    resolve(Compound("grandmother", List(Variable("GM"),Atom("jenny"))),rules,Set.empty, Map.empty).foreach { result =>
-        println(s"\n\nResult grandmother ---------------: $result")
-    }
-    println("==========================================")
-        
-}
-
-@main def testRuleEngineSimple =
-    import RulesEngine._
-
-    val rules = List(
-        Rule(Compound("male", List(Atom("john"))), Nil),
-        Rule(Compound("male", List(Atom("peter"))), Nil),
-        Rule(Compound("male", List(Atom("paul"))), Nil),
-        Rule(Compound("married", List(Atom("paul"), Atom("paulina"))), Nil),
-        
-        Rule(Compound("bachelor", List(Variable("X"))), List(
-                Compound("male", List(Variable("X"))),
-                Compound("not", List(Compound("married", List(Variable("X"), Variable("_")))))))
-    )
-    /*
-    val x = Unification.unify(Atom("a"), Atom("a"), Map()) // Should return Some(Map())
-    println(x)
-    val y = Unification.unify(Atom("a"), Atom("b"), Map()) // Should return None
-    println(y)
-    val z = Unification.unify(Variable("X"), Atom("a"), Map()) 
-    println(z)
-    val a = Unification.unify(Variable("X"), Variable("Y"), Map())
-    println(a)
-    val c = Unification.unify(Variable("X"), Compound("f", List(Variable("X"))), Map()) // Should return None
-    println(c)
-    val comp = Unification.unify(
-                    Compound("f", List(Atom("a"), Variable("X"))),
-                    Compound("f", List(Atom("a"), Atom("b"))),
-                    Map()
-                ) 
-    println(s"comp ===== $comp")
-
-    val comnest = Unification.unify(
-                    Compound("f", List(Variable("X"), Compound("g", List(Variable("Y"))))),
-                    Compound("f", List(Atom("a"), Compound("g", List(Atom("b"))))),
-                    Map()
-                    )   
-    println(s"comnest == $comnest")
-    */
-
-    val query = Compound("bachelor", List(Variable("X")))
+    val query = Compound("bachelor", List(Variable("B")))
     val results = resolve(query, rules, Set.empty, Map.empty)
 
     println("Results========bachelor===================")
     results.map(r => println(s"results $r"))
     println("Results===========================")
-    /*
+
+    
+    println("Testing Who are husbands")
+    println("==========================================")
+    resolve(Compound("husband", List(Variable("H"),Variable("W"))),rules,Set.empty, Map.empty ).foreach { result =>
+        println(s"Result husbands ---------------: $result")
+    }
+    println("==========================================")
+
+    
+    println("Testing Who is husband of paulina: should be paul")
+    println("==========================================")
+    resolve(Compound("husband", List(Variable("H"),Atom("paulina"))),rules,Set.empty, Map.empty ).foreach { result =>
+        println(s"Result husband of paulina ---------------: $result")
+    }
+    println("==========================================")
+
+    
+    println("Testing Who is mother of jenny: should be jen")
+    println("==========================================")
+    resolve(Compound("mother", List(Variable("M"),Atom("jenny"))),rules,Set.empty, Map.empty).foreach { result =>
+        println(s"Result mother ---------------: $result")
+    }
+    println("==========================================")
+    
+    
+    println("Testing Who is grandmother jenny should be granny")
+    println("==========================================")
+    resolve(Compound("grandmother", List(Variable("GM"),Atom("jenny"))),rules,Set.empty, Map.empty).foreach { result =>
+        println(s"Result grandmother ---------------: $result")
+    }
+    println("==========================================")
+        
+}
+
+@main def testForwardChaining =
+    import RulesEngine._
+
     val forwardFacts = forwardChain(rules)
     println("Forward Chaining Facts:")
     forwardFacts.foreach(println)
-    */
+    
