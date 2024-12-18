@@ -8,6 +8,13 @@ import org.apache.spark.sql.avro._
 
 import scala3encoders.given
 
+  // Define transformations
+  sealed trait Transformation
+  case class AddColumn(name: String, expression: org.apache.spark.sql.Column) extends Transformation
+  case class DropColumn(name: String) extends Transformation
+  case class RenameColumn(oldName: String, newName: String) extends Transformation
+
+
 object WindowFunctions extends App {
 
   val spark: SparkSession = SparkSession.builder()
@@ -111,6 +118,25 @@ object WindowFunctions extends App {
           .option("quote","'")
           .load("c:/tmp/customer.csv")
   dfRead.show()
+  //val df = dfRead.withColumn("ORDER_AMT", rtrim(col("ORDER_AMT")))
+
+  val transformations = Seq(
+      
+      AddColumn("DISCOUNT", col("ORDER_AMT") * 0.90),
+      //AddColumn("cat", when(col("salary") > 2000,"high").otherwise("normal")),
+      AddColumn("TIER_DISCOUNT", 
+                      when(col("CUST_TIER") === lit("Gold"),col("ORDER_AMT") * 0.80).otherwise(col("ORDER_AMT") * 0.90)),
+      RenameColumn("CUST_ID", "ID"),
+      DropColumn("ID"),
+      DropColumn("CUST_NAME"),
+      
+    )
+
+  // Apply transformations
+  val resultDf = ETLTransformer.transform(dfRead, transformations, Some(Seq("CUST_TIER")))
+
+  // Show the result
+  resultDf.show()
   spark.close()
 
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
@@ -164,11 +190,6 @@ object ETLTransformer {
     }
   }
 
-  // Define transformations
-  sealed trait Transformation
-  case class AddColumn(name: String, expression: org.apache.spark.sql.Column) extends Transformation
-  case class DropColumn(name: String) extends Transformation
-  case class RenameColumn(oldName: String, newName: String) extends Transformation
 
   def main(args: Array[String]): Unit = {
     val spark = SparkSession.builder()
