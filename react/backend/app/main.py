@@ -5,8 +5,10 @@ from typing import List
 import numpy as np
 import QuantLib as ql  # Example for option pricing
 from fastapi.middleware.cors import CORSMiddleware
-
-
+from fastapi.responses import StreamingResponse
+from flask import Flask, send_file
+import matplotlib.pyplot as plt
+import io
 
 app = FastAPI()
 
@@ -47,6 +49,10 @@ class OptionPricingRequest(BaseModel):
     option_type: str  # "call" or "put"
 
 class OptionPricingResponse(BaseModel):
+    option_price: float
+
+
+class OptionPricingImage(BaseModel):
     option_price: float
 
 # Example Risk Calculation Endpoint
@@ -95,3 +101,27 @@ def price_option(request: OptionPricingRequest):
     price = european_option.NPV()
     
     return OptionPricingResponse(option_price=price)
+
+
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to FastAPI chart server!"}
+
+@app.get("/chart")
+def get_chart():
+    # Generate a simple plot
+    plt.figure(figsize=(6, 4))
+    plt.plot([1, 2, 3, 4], [10, 20, 25, 30], label="Sample Data")
+    plt.title("Sample Chart")
+    plt.xlabel("X-axis")
+    plt.ylabel("Y-axis")
+    plt.legend()
+
+    # Save the plot to a BytesIO object
+    img = io.BytesIO()
+    plt.savefig(img, format='png')
+    img.seek(0)  # Rewind the file pointer to the start
+    plt.close()  # Close the plt object to free memory
+
+    # Return the image as a StreamingResponse
+    return StreamingResponse(img, media_type="image/png")

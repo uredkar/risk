@@ -1,10 +1,9 @@
 {
   "pages": {
-    "/(dashboard)/playground3/page": [
+    "/(dashboard)/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/(dashboard)/playground3/page.css",
-      "static/chunks/app/(dashboard)/playground3/page.js"
+      "static/chunks/app/(dashboard)/page.js"
     ],
     "/(dashboard)/layout": [
       "static/chunks/webpack.js",
@@ -15,6 +14,33 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/layout.js"
+    ],
+    "/(dashboard)/portfolio/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(dashboard)/portfolio/page.js"
+    ],
+    "/(dashboard)/accounts/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(dashboard)/accounts/page.js"
+    ],
+    "/(dashboard)/risk/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(dashboard)/risk/page.js"
+    ],
+    "/(dashboard)/playground1/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(dashboard)/playground1/page.css",
+      "static/chunks/app/(dashboard)/playground1/page.js"
+    ],
+    "/(dashboard)/playground3/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(dashboard)/playground3/page.css",
+      "static/chunks/app/(dashboard)/playground3/page.js"
     ]
   }
 }

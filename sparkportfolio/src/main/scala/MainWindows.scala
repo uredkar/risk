@@ -91,6 +91,28 @@ object WindowFunctions extends App {
   dfRead.show()
 }
 
+@main def readcustomer() = 
+  val spark: SparkSession = SparkSession.builder()
+    .master("local[1]")
+    .appName("SparkByExamples.com")
+    .config("spark.sql.warehouse.dir", "file:///C:/tmp/spark-warehouse") // Use a valid path
+    .config("spark.local.dir", "C:/tmp")
+    .getOrCreate()
+
+  spark.sparkContext.setLogLevel("ERROR")
+
+  import spark.implicits._
+
+  println("================== reading from file")
+  val dfRead = spark.read
+          .format("csv")
+          .option("header", "true") //first line in file has headers
+          .option("inferSchema", "true") 
+          .option("quote","'")
+          .load("c:/tmp/customer.csv")
+  dfRead.show()
+  spark.close()
+
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 import org.apache.spark.sql.functions._
 
@@ -123,6 +145,8 @@ object ETLTransformer {
 
         case RenameColumn(oldName, newName) =>
           df.withColumnRenamed(oldName, newName)
+
+        
       }
     }
 
@@ -165,12 +189,13 @@ object ETLTransformer {
     // Define transformations
     val transformations = Seq(
       AddColumn("bonus", col("salary") * 0.1),
+      AddColumn("cat", when(col("salary") > 2000,"high").otherwise("normal")),
       RenameColumn("name", "employee_name"),
       DropColumn("age")
     )
 
     // Apply transformations
-    val resultDf = transform(inputDf, transformations, Some(Seq("employee_name")))
+    val resultDf = transform(inputDf, transformations, Some(Seq("employee_name","cat")))
 
     // Show the result
     resultDf.show()
