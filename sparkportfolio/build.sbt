@@ -19,6 +19,8 @@ def sparkSqlDep(ver: String) =
 val munit = "org.scalameta" %% "munit" % "0.7.29"
 
 libraryDependencies += "org.scalameta" %% "munit" % "1.0.0" % Test
+// https://mvnrepository.com/artifact/org.apache.spark/spark-avro
+libraryDependencies += ("org.apache.spark" %% "spark-avro" % "3.5.3").cross(CrossVersion.for3Use2_13)
 libraryDependencies += "io.github.vincenzobaz" %% "spark-scala3-encoders" % "0.2.6"
 libraryDependencies += "io.github.vincenzobaz" %% "spark-scala3-udf" % "0.2.6" 
 
