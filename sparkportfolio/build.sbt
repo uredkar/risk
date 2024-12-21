@@ -17,14 +17,30 @@ def sparkSqlDep(ver: String) =
 
 
 val munit = "org.scalameta" %% "munit" % "0.7.29"
-
+ThisBuild / libraryDependencySchemes += "com.github.luben" %% "zstd-jni" % "always"
+ThisBuild / evictionErrorLevel := Level.Warn
 libraryDependencies += "org.scalameta" %% "munit" % "1.0.0" % Test
 // https://mvnrepository.com/artifact/org.apache.spark/spark-avro
 libraryDependencies += ("org.apache.spark" %% "spark-avro" % "3.5.3").cross(CrossVersion.for3Use2_13)
+libraryDependencies += ("org.apache.spark" %% "spark-sql-kafka-0-10" % "3.5.3").cross(CrossVersion.for3Use2_13)
+//libraryDependencies += ("org.apache.spark" %% "spark-streaming-kafka-0-10" % "3.5.3").cross(CrossVersion.for3Use2_13)
+//libraryDependencies += ("org.apache.spark" %% "spark-streaming" % "3.5.3").cross(CrossVersion.for3Use2_13)
+libraryDependencies += "org.apache.kafka" % "kafka-clients" % "3.5.2"
 libraryDependencies += "io.github.vincenzobaz" %% "spark-scala3-encoders" % "0.2.6"
 libraryDependencies += "io.github.vincenzobaz" %% "spark-scala3-udf" % "0.2.6" 
 
+//libraryDependencies += "org.apache.spark" %% "spark-sql-kafka-0-10" % "3.5.3"
+libraryDependencies += "org.apache.parquet" % "parquet-hadoop" % "1.14.1"
+//libraryDependencies += "com.github.luben" % "zstd-jni" % "1.5.6-3" force()
+libraryDependencies += "com.github.luben" % "zstd-jni" % "1.5.6-4"
+ 
+//libraryDependencies += "org.apache.spark" %% "spark-core" % "3.5.3"
 
+dependencyOverrides ++= Seq(
+  "com.fasterxml.jackson.core" % "jackson-databind" % "2.15.2",
+  "com.fasterxml.jackson.core" % "jackson-core" % "2.15.2",
+  "com.fasterxml.jackson.core" % "jackson-annotations" % "2.15.2"
+)
 val unnamedJavaOptions = List(
   "-XX:+IgnoreUnrecognizedVMOptions",
   "--add-opens=java.base/java.lang=ALL-UNNAMED",
@@ -101,7 +117,7 @@ lazy val examples =
 
 // Spark versions to check. Always most recent first.
 lazy val sparkVersions = List(
-  SparkVersionAxis("_spark35_", "spark350", "3.5.0"),
+  SparkVersionAxis("_spark35_", "spark351", "3.5.1"),
   SparkVersionAxis("_spark34_", "spark341", "3.4.1"),
   SparkVersionAxis("_spark33_", "spark333", "3.3.3")
 )

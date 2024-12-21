@@ -161,19 +161,20 @@ object ETLTransformer {
       groupByCols: Option[Seq[String]] = None
   ): DataFrame = {
     // Apply column transformations
-    val transformedDf = transformations.foldLeft(inputDf) { (df, transformation) =>
-      transformation match {
-        case AddColumn(name, expression) =>
-          df.withColumn(name, expression)
+    val transformedDf = transformations.foldLeft(inputDf) { 
+      (df, transformation) =>
+        transformation match {
+          case AddColumn(name, expression) =>
+            df.withColumn(name, expression)
 
-        case DropColumn(name) =>
-          df.drop(name)
+          case DropColumn(name) =>
+            df.drop(name)
 
-        case RenameColumn(oldName, newName) =>
-          df.withColumnRenamed(oldName, newName)
+          case RenameColumn(oldName, newName) =>
+            df.withColumnRenamed(oldName, newName)
 
-        
-      }
+          
+        }
     }
 
     // Apply group by and aggregation if specified
