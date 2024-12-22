@@ -5,7 +5,7 @@ import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.avro._
 
 
-@main def Kafka() = {
+@main def SparkKafka() = {
   val spark: SparkSession = SparkSession.builder()
     .master("local[1]")
     .appName("SparkByExamples.com")
@@ -23,7 +23,7 @@ import org.apache.spark.sql.avro._
     .option("kafka.bootstrap.servers", "127.0.0.1:9092") // Replace with your Kafka broker address
     .option("subscribe", "my-topic") // Replace with your Kafka topic name
     .option("group.id", "scala-consumer-group")
-    .option("startingOffsets", "earliest") // Start reading from latest messages
+    .option("startingOffsets", "earliest") // Start reading from earliest messages
     .load()
 
   val valueDF = df.selectExpr("CAST(value AS STRING)")
@@ -80,6 +80,32 @@ object KafkaScalaConsumer {
       case e: Exception => e.printStackTrace()
     } finally {
       consumer.close()
+    }
+  }
+}
+
+
+import java.util.Properties
+import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
+
+object KafkaProducerTest {
+  def main(args: Array[String]): Unit = {
+    val props = new Properties()
+    props.put("bootstrap.servers", "localhost:9092") // External port
+    props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer")
+    props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer")
+    
+    val producer = new KafkaProducer[String, String](props)
+    val topic = "my-topic"
+
+    try {
+      val record = new ProducerRecord[String, String](topic, "key", "value")
+      producer.send(record)
+      println("Message sent successfully!")
+    } catch {
+      case e: Exception => e.printStackTrace()
+    } finally {
+      producer.close()
     }
   }
 }
