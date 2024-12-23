@@ -99,7 +99,8 @@ val d = lines_clean.grouped(4)
 
 val writer = new PrintWriter("customer.csv")
 d.foreach { l =>
-    writer.println(l.mkString("'","','","'"))
+    val lt = l.map(s => s.trim())
+    writer.println(lt.mkString("'","','","'"))
 }
 
 //d.foreach(r => writer.println(s"${r(0)},${r(1)},${r(2)},${r(3)}"))

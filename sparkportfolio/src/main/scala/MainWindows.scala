@@ -4,15 +4,15 @@
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.expressions.Window
-import org.apache.spark.sql.avro._
+//import org.apache.spark.sql.avro._
 
-import scala3encoders.given
+//import scala3encoders.given
 
-  // Define transformations
-  sealed trait Transformation
-  case class AddColumn(name: String, expression: org.apache.spark.sql.Column) extends Transformation
-  case class DropColumn(name: String) extends Transformation
-  case class RenameColumn(oldName: String, newName: String) extends Transformation
+// Define transformations
+sealed trait Transformation
+case class AddColumn(name: String, expression: org.apache.spark.sql.Column) extends Transformation
+case class DropColumn(name: String) extends Transformation
+case class RenameColumn(oldName: String, newName: String) extends Transformation
 
 
 object WindowFunctions extends App {
@@ -98,48 +98,51 @@ object WindowFunctions extends App {
   dfRead.show()
 }
 
-@main def readcustomer() = 
-  val spark: SparkSession = SparkSession.builder()
-    .master("local[1]")
-    .appName("SparkByExamples.com")
-    .config("spark.sql.warehouse.dir", "file:///C:/tmp/spark-warehouse") // Use a valid path
-    .config("spark.local.dir", "C:/tmp")
-    .getOrCreate()
+object ReadCustomer {
+  def main(args: Array[String]): Unit = {
+    val spark: SparkSession = SparkSession.builder()
+      .master("local[1]")
+      .appName("SparkByExamples.com")
+      .config("spark.sql.warehouse.dir", "file:///C:/tmp/spark-warehouse") // Use a valid path
+      .config("spark.local.dir", "C:/tmp")
+      .getOrCreate()
 
-  spark.sparkContext.setLogLevel("ERROR")
+    spark.sparkContext.setLogLevel("ERROR")
 
-  import spark.implicits._
+    //import spark.implicits._
 
-  println("================== reading from file")
-  val dfRead = spark.read
-          .format("csv")
-          .option("header", "true") //first line in file has headers
-          .option("inferSchema", "true") 
-          .option("quote","'")
-          .load("c:/tmp/customer.csv")
-  dfRead.show()
-  //val df = dfRead.withColumn("ORDER_AMT", rtrim(col("ORDER_AMT")))
+    println("================== reading from file")
+    val dfRead = spark.read
+            .format("csv")
+            .option("header", "true") //first line in file has headers
+            .option("inferSchema", "true") 
+            .option("quote","'")
+            .load("c:/tmp/customer.csv")
+    dfRead.show()
+    //val df = dfRead.withColumn("ORDER_AMT", rtrim(col("ORDER_AMT")))
 
-  val transformations = Seq(
-      
-      AddColumn("DISCOUNT", col("ORDER_AMT") * 0.90),
-      //AddColumn("cat", when(col("salary") > 2000,"high").otherwise("normal")),
-      AddColumn("TIER_DISCOUNT", 
-                      when(col("CUST_TIER") === lit("Gold"),col("ORDER_AMT") * 0.80).otherwise(col("ORDER_AMT") * 0.90)),
-      RenameColumn("CUST_ID", "ID"),
-      DropColumn("ID"),
-      DropColumn("CUST_NAME"),
-      
-    )
+    val transformations = Seq(
+        
+        AddColumn("DISCOUNT", col("ORDER_AMT") * 0.90),
+        //AddColumn("cat", when(col("salary") > 2000,"high").otherwise("normal")),
+        AddColumn("TIER_DISCOUNT", 
+                        when(col("CUST_TIER") === lit("Gold"),col("ORDER_AMT") * 0.80).otherwise(col("ORDER_AMT") * 0.90)),
+        RenameColumn("CUST_ID", "ID"),
+        DropColumn("ID"),
+        DropColumn("CUST_NAME"),
+        
+      )
 
-  // Apply transformations
-  val resultDf = ETLTransformer.transform(dfRead, transformations, Some(Seq("CUST_TIER")))
+    // Apply transformations
+    val resultDf = ETLTransformer.transform(dfRead, transformations, Some(Seq("CUST_TIER")))
 
-  // Show the result
-  resultDf.show()
-  spark.close()
+    // Show the result
+    resultDf.show()
+    spark.close()
+  }
+}
 
-import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions._
 
 object ETLTransformer {

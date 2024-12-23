@@ -46,6 +46,7 @@ lazy val root = project
     libraryDependencies += "org.typelevel" %% "discipline-core" % Versions.discipline % Test,
     libraryDependencies += "org.scalacheck" %% "scalacheck" % Versions.scalaCheck % Test,
     libraryDependencies += "org.scalatestplus" %% "scalacheck-1-17" % Versions.scalaTestPlus % Test,
+    
     libraryDependencies += "io.circe" %% "circe-core" % "0.14.5",
     libraryDependencies += "io.circe" %% "circe-yaml" % "0.14.2",
     libraryDependencies += "io.circe" %% "circe-generic" % "0.14.6",

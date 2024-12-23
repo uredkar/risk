@@ -4,9 +4,9 @@ package sql
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
 import org.apache.spark.sql.functions.col
 
-import scala3encoders.given
+//import scala3encoders.given
 
-object StarWarsData:
+object StarWarsData {
   val spark = SparkSession.builder().master("local").getOrCreate
   import spark.implicits._
 
@@ -25,7 +25,7 @@ object StarWarsData:
     ("Chewbacca", "Han Solo"),
     ("Lando Calrissian", "Han Solo"),
     ("Jabba", "Boba Fett")
-  ).map(Friends.apply).toDS
+  ).map(x => Friends.apply(x._1,x._2)).toDS
 
   case class FriendsMissing(who: String, friends: Option[String])
   val dsMissing: Dataset[FriendsMissing] = Seq(
@@ -35,7 +35,7 @@ object StarWarsData:
     ("Leia Skywalker", Some("Obi-Wan Kenobi")),
     ("Sheev Palpatine", Some("Anakin Skywalker")),
     ("Han Solo", Some("Leia Skywalker, Luke Skywalker, Obi-Wan Kenobi"))
-  ).map(FriendsMissing.apply).toDS
+  ).map(x => FriendsMissing.apply(x._1,x._2)).toDS
 
   case class Character(
       name: String,
@@ -103,12 +103,19 @@ object StarWarsData:
 
   val sw_ds = sw_df.as[SW]
 
-@main def StarWars() = {
-  import StarWarsData._
-  try
-    friends.show()
-    dsMissing.show()
-    characters.show()
-    sw_ds.show()
-  finally spark.close()
+}
+
+object StarWar {
+  def main(args: Array[String]): Unit = {
+    import StarWarsData._
+    try {
+      friends.show()
+      dsMissing.show()
+      characters.show()
+      sw_ds.show()
+    }
+    finally {
+      spark.close()
+    }
+  }
 }

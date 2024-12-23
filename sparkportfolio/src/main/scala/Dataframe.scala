@@ -1,10 +1,10 @@
-import scala3encoders.given
+//import scala3encoders.given
 import org.apache.spark.sql.{Dataset,Row, SparkSession}
 import org.apache.spark.sql.functions._
-import scala3udf.{Udf => udf} // "old" udf doesn't interfer with new scala3udf.udf when renamed
+//import scala3udf.{Udf => udf} // "old" udf doesn't interfer with new scala3udf.udf when renamed
 
 
-import scala3encoders.given
+//import scala3encoders.given
 
 object DataFrameWithDSL2 {
 
@@ -36,8 +36,8 @@ object DataFrameWithDSL2 {
 
       val data2 = Seq(departmentWithEmployees3,departmentWithEmployees4)
 
-     val spark = SparkSession.builder().master("local").getOrCreate
-     import spark.implicits._
+      val spark = SparkSession.builder().master("local").getOrCreate
+      import spark.implicits._
 
   
       //val dfdata = data1.map { case (d: Department, s: List[Employee]) => DepartmentWithEmployees.apply(d,s) } //spark.createDataFrame(data1)

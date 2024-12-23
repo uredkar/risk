@@ -4,7 +4,7 @@ import org.apache.spark.sql.types.{StringType,StructType}
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions.col
 
-import scala3encoders.given
+//import scala3encoders.given
 
 
 object FlattenNestedStruct extends App {
