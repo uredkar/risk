@@ -42,19 +42,30 @@ class ColumnarStore(filePath: String):
         save(updatedData)
 
     // Delete a partition based on a predicate
-    /*
-    def deletePartition(predicate: Row => Boolean): Unit =
-        val existingData = load().getOrElse(ColumnarData(Nil, Nil, Nil))
-        val remainingRows = existingData.name.zip(existingData.age).zip(existingData.partitionKey)
-            .map { case (n, a, p) => Row(n, a, p) }
-            .filterNot(predicate)
-        val updatedData = ColumnarData(
-            name = remainingRows.map(_.name),
-            age = remainingRows.map(_.age),
-            partitionKey = remainingRows.map(_.partitionKey),
+    
+    def filterByPredicate(predicate: (String, Int, String) => Boolean): ColumnarData = {
+        val existingData = load().getOrElse(ColumnarData(Nil,Nil,Nil))
+        val filteredIndices = existingData.name.indices.filter(i => predicate(existingData.name(i), existingData.age(i), existingData.partitionKey(i)))
+
+        ColumnarData(
+            existingData.name.zipWithIndex.filter { case (_, index) => filteredIndices.contains(index) }.map(_._1),
+            existingData.age.zipWithIndex.filter { case (_, index) => filteredIndices.contains(index) }.map(_._1),
+            existingData.partitionKey.zipWithIndex.filter { case (_, index) => filteredIndices.contains(index) }.map(_._1)
         )
+    }
+
+  
+    def deletePartitionWithPredicate(predicate: (String, Int, String) => Boolean): Unit =
+        val existingData = load().getOrElse(ColumnarData(Nil, Nil, Nil))
+        val filteredIndices = existingData.name.indices.filter(i => predicate(existingData.name(i), existingData.age(i), existingData.partitionKey(i)))
+        
+        val updatedData = ColumnarData(
+                existingData.name.zipWithIndex.filter { case (_, index) => !filteredIndices.contains(index) }.map(_._1),
+                existingData.age.zipWithIndex.filter { case (_, index) => !filteredIndices.contains(index) }.map(_._1),
+                existingData.partitionKey.zipWithIndex.filter { case (_, index) => !filteredIndices.contains(index) }.map(_._1)
+            )
         save(updatedData)
-    */
+    
     def deletePartition(partitionKey: String): Unit =
         val existingData = load().getOrElse(ColumnarData(Nil,Nil,Nil))
         val filteredIndices = existingData.partitionKey.indices.filter(i => existingData.partitionKey(i) != partitionKey)
@@ -101,30 +112,41 @@ def generateRandomRows(n: Int): List[Row] =
 
 // Usage example
 @main def runColumnarStore() =
-  val store = ColumnarStore("columnar_store.json")
+    val store = ColumnarStore("columnar_store.json")
 
-  // Initial rows
+    // Initial rows
+
+    val rowsCustom = List(
+        Row("Alice", 25,"London"),
+        Row("Bob", 30,"London"),
+        Row("Charlie", 35,"London")
+    )
   
-  val rowsCustom = List(
-    Row("Alice", 25,"London"),
-    Row("Bob", 30,"London"),
-    Row("Charlie", 35,"London")
-  )
-  
 
-  val rows = generateRandomRows(10) ++ rowsCustom
-  println("------------------------------")
-  println(rows)
-  println("------------------------------")
-  // Save data to columnar store
-  store.addPartition(rows)
+    val rows = generateRandomRows(10) ++ rowsCustom
+    println("------------------------------")
+    println(rows)
+    println("------------------------------")
+    // Save data to columnar store
+    store.addPartition(rows)
 
-  // Add a new partition
-  store.addPartition(List(Row("David", 40,"Paris")))
+    // Add a new partition
+    store.addPartition(List(Row("David", 40,"Paris")))
 
-  // Delete a partition where age > 30
-  //store.deletePartition(row => row.age > 30)
-  store.deletePartition("Tokyo")
-  // Read specific columns
-  val columns = store.readColumns(List("name","age","partitionKey"))
-  println(s"Read columns: $columns")
+    println("----age > 10 and Alice --------------------------")
+    val filteredData = store.filterByPredicate((name, age, _) => age > 10 && name == "Alice") 
+    println(filteredData) // Output: ColumnarData(List(Alice, Alice),List(30, 30),List(A, A))
+    println("-------age > 10 and London -----------------------")
+    // Filter by age > 10 and partitionKey = "A"
+    val filteredData2 = store.filterByPredicate((_, age, partitionKey) => age > 10 && partitionKey == "London") 
+    println(filteredData2) // Output: ColumnarData(List(Alice, Alice),List(30, 30),List(A, A))
+
+    // Delete a partition where age > 30
+
+    //store.deletePartition(row => row.age > 30)
+    println("Delete -------(age > 10 and Alice) or Toyko -----------------------")
+    store.deletePartitionWithPredicate((name, age, _) => age > 30 || name == "Person_10")
+    store.deletePartition("Paris")
+    // Read specific columns
+    val columns = store.readColumns(List("name","age","partitionKey"))
+    println(s"Read columns: $columns")
