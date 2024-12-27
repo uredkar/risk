@@ -56,6 +56,7 @@ lazy val root = project
     libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.3.8",
     libraryDependencies += "com.typesafe" % "config" % "1.4.2",
     libraryDependencies += "com.lihaoyi" %% "pprint" % "0.8.1",                // Pretty Printing
-    libraryDependencies += "com.github.tototoshi" %% "scala-csv" % "2.0.0"     // Tabular formatting
+    libraryDependencies += "com.github.tototoshi" %% "scala-csv" % "2.0.0",     // Tabular formatting
+    libraryDependencies += "com.lihaoyi" %% "upickle" % "3.1.0"
 
   )
