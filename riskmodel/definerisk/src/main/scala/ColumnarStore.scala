@@ -78,7 +78,7 @@ class ColumnarStore(filePath: String):
         save(updatedData)
 
 
-  // Read specific columns
+    // Read specific columns
     def readColumns(columns: List[String]): Map[String, List[Any]] =
         val existingData = load().getOrElse(ColumnarData(Nil, Nil, Nil))
         val columnarMap = Map(
