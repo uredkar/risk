@@ -203,31 +203,40 @@ def totalXMAS(grid: Grid): Int =
     val invalidUpdates = updates.filter(!isValid(rules)(_))
 
     def fixUpdate(update: List[Long]): List[Long] =
+        // filter rules that have k in the updates and there exists vs in the update
+        // i.e. get numbers that are in the updates in k or vs of the rules
+        // ignore numbers non in updates!
+        println(s"update $update")
         val relevantRules = rules
-            .filter((k, vs) => update.contains(k) && vs.exists(update.contains))
+            .filter((k, vs) => update.contains(k) && vs.exists(p => update.contains(p)))
             .mapValues(_.filter(update.contains)).toMap
 
+        println(s"relevantRules $relevantRules")
         val prevsMap = relevantRules
             .map { case (k, vs) => vs.map(_ -> k) }
             .flatten.groupMap(_._1)(_._2)
+        
+        println(s"prevsMap $prevsMap")
 
         val startNodes = update.filter(k => !relevantRules.values.flatten.toList.contains(k))
+        println(s"startNodes $startNodes")
 
         def bfs(queue: Queue[Long], visited: Set[Long] = Set.empty, res: List[Long] = List.empty): List[Long] = queue.dequeueOption match
             case None => res
-            case Some((node, queue1)) =>
+            case Some((node, queue1)) => {
                 val newVisited = visited + node
                 val newRes = res :+ node
                 val newQueue = relevantRules.getOrElse(node, List.empty)
-                .filter { n =>
-                    val notVisited = !newVisited.contains(n)
-                    val notInQueue = !queue1.contains(n)
-                    val allPrevVisited = prevsMap.getOrElse(n, List.empty).forall(p => newVisited.contains(p) || queue1.contains(p))
-                    notVisited && notInQueue && allPrevVisited
-                }
-                .foldLeft(queue1)(_.appended(_))
+                    .filter { n =>
+                        val notVisited = !newVisited.contains(n)
+                        val notInQueue = !queue1.contains(n)
+                        val allPrevVisited = prevsMap.getOrElse(n, List.empty).forall(p => newVisited.contains(p) || queue1.contains(p))
+                        notVisited && notInQueue && allPrevVisited
+                    }
+                    .foldLeft(queue1)(_.appended(_))
                 bfs(newQueue, newVisited, newRes)
-            bfs(Queue.from(startNodes))
+            }
+        bfs(Queue.from(startNodes))
     //invalidUpdates.foreach(println)
     val part2Sum = invalidUpdates.map(fixUpdate).map(us => us(us.size / 2)).sum    
     println(s"mid digit sum $part2Sum")
