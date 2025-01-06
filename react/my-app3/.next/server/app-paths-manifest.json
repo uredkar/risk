@@ -1,8 +1,3 @@
 {
-  "/(dashboard)/portfolio/page": "app/(dashboard)/portfolio/page.js",
-  "/(dashboard)/page": "app/(dashboard)/page.js",
-  "/(dashboard)/accounts/page": "app/(dashboard)/accounts/page.js",
-  "/(dashboard)/risk/page": "app/(dashboard)/risk/page.js",
-  "/(dashboard)/playground1/page": "app/(dashboard)/playground1/page.js",
-  "/(dashboard)/playground3/page": "app/(dashboard)/playground3/page.js"
+  "/(dashboard)/d3jscharts/page": "app/(dashboard)/d3jscharts/page.js"
 }

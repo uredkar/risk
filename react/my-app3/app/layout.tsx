@@ -36,6 +36,11 @@ const NAVIGATION: Navigation = [
     icon: <ViewListIcon />,
   },
   {
+    segment: 'd3jscharts',
+    title: 'D3 JS Charts',
+    icon: <ViewListIcon />,
+  },
+  {
     segment: 'playground1',
     title: 'Playground1',
     icon: <ViewListIcon />,
