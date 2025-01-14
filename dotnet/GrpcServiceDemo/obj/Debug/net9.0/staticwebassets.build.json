@@ -1,0 +1,24 @@
+{
+  "Version": 1,
+  "Hash": "2GPq3wiJn72JXMuUDrRjA4BA2KOcFbOoYx5+w8j3vUk=",
+  "Source": "GrpcServiceDemo",
+  "BasePath": "_content/GrpcServiceDemo",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [
+    {
+      "Identity": "C:\\sources\\risk\\dotnet\\GrpcServiceShared\\GrpcServiceShared.csproj",
+      "Version": 2,
+      "Source": "GrpcServiceShared",
+      "GetPublishAssetsTargets": "ComputeReferencedStaticWebAssetsPublishManifest;GetCurrentProjectPublishStaticWebAssetItems",
+      "AdditionalPublishProperties": "Configuration=Debug;Platform=AnyCPU",
+      "AdditionalPublishPropertiesToRemove": "WebPublishProfileFile;TargetFramework",
+      "GetBuildAssetsTargets": "GetCurrentProjectBuildStaticWebAssetItems",
+      "AdditionalBuildProperties": "Configuration=Debug;Platform=AnyCPU",
+      "AdditionalBuildPropertiesToRemove": "WebPublishProfileFile;TargetFramework"
+    }
+  ],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}

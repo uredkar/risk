@@ -17,10 +17,10 @@ var headers = new Metadata();
 headers.Add("Authorization", $"Bearer {token}");
 
 using var channel = GrpcChannel.ForAddress("https://localhost:5001");
-//var client = new Greeter.GreeterClient(channel);
+var client = new Greeter.GreeterClient(channel);
 
-//var reply = await client.SayHelloAsync(new HelloRequest { Name = "World" }, headers);
-//Console.WriteLine($"Greeting: {reply.Message}");
+var reply = await client.SayHelloAsync(new HelloRequest { Name = "World" }, headers);
+Console.WriteLine($"Greeting: {reply.Values}");
 
 await HftClient.Execute();
 

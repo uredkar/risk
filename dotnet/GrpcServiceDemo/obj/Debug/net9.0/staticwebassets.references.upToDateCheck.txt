@@ -1,0 +1,14 @@
+C:\sources\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\staticwebassets.build.json
+C:\sources\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\staticwebassets.build.json
+C:\sources\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\staticwebassets.build.json
+C:\sources\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\staticwebassets.build.json
+C:\sources\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\staticwebassets.build.json
+C:\sources\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\staticwebassets.build.json
+C:\sources\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\staticwebassets.build.json
+C:\sources\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\staticwebassets.build.json
+C:\sources\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\staticwebassets.build.json
+C:\sources\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\staticwebassets.build.json
+C:\sources\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\staticwebassets.build.json
+C:\sources\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\staticwebassets.build.json
+C:\sources\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\staticwebassets.build.json
+C:\sources\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\staticwebassets.build.json
