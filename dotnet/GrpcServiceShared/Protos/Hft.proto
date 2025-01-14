@@ -1,0 +1,92 @@
+syntax = "proto3";
+option csharp_namespace = "GrpcServiceDemo";
+package hft;
+
+// High-Level Trading Data Message
+message HftData {
+  string sourceId = 1; // Identifier for the source (e.g., exchange or market)
+  MarketData marketData = 2; // Real-time market data
+  repeated OrderUpdate orderUpdates = 3; // Updates to orders
+  repeated Trade tradeExecutions = 4; // Executed trades
+  uint64 timestamp = 5; // Event timestamp in nanoseconds
+}
+
+// Market Data: Price updates, volume, and order book state
+message MarketData {
+  string symbol = 1; // Ticker symbol (e.g., AAPL)
+  PriceLevel bid = 2; // Top bid level
+  PriceLevel ask = 3; // Top ask level
+  repeated OrderBookLevel orderBook = 4; // Full order book levels
+}
+
+// Order Book Level for depth of market
+message OrderBookLevel {
+  PriceLevel bid = 1; // Bid level
+  PriceLevel ask = 2; // Ask level
+}
+
+// Price and Volume Information
+message PriceLevel {
+  double price = 1; // Price at this level
+  uint64 volume = 2; // Volume at this price
+  uint32 count = 3; // Number of orders at this level
+}
+
+// Order Update: Reflects changes to existing orders
+message OrderUpdate {
+  string orderId = 1; // Unique order ID
+  string symbol = 2; // Ticker symbol
+  OrderType orderType = 3; // Market, Limit, etc.
+  OrderAction action = 4; // Insert, Update, Cancel
+  double price = 5; // Price of the order
+  uint64 volume = 6; // Volume of the order
+  uint64 timestamp = 7; // Update timestamp
+}
+
+// Trade Execution
+message Trade {
+  string tradeId = 1; // Unique trade identifier
+  string symbol = 2; // Ticker symbol
+  double price = 3; // Trade price
+  uint64 volume = 4; // Trade volume
+  string buyerId = 5; // Buyer participant ID
+  string sellerId = 6; // Seller participant ID
+  uint64 timestamp = 7; // Trade execution timestamp
+}
+
+// Enums for Order Types and Actions
+enum OrderType {
+  MARKET = 0;
+  LIMIT = 1;
+  STOP = 2;
+  STOP_LIMIT = 3;
+}
+
+enum OrderAction {
+  INSERT = 0;
+  UPDATE = 1;
+  CANCEL = 2;
+}
+
+// Analytics: Additional fields for latency and efficiency
+message Analytics {
+  uint64 latencyNs = 1; // Latency in nanoseconds
+  double movingAverage = 2; // Moving average price
+  double volatility = 3; // Price volatility
+}
+
+// High-Frequency Trading Metadata
+message HftMetadata {
+  string version = 1; // Schema version
+  string environment = 2; // Development, Staging, Production
+  repeated string tags = 3; // Metadata tags
+}
+
+service HftService {
+    rpc StreamHftData (SubscribeRequest) returns (stream HftData);
+}
+
+message SubscribeRequest {
+  repeated string symbols = 1; // List of symbols to subscribe to
+  string clientId = 2; // Unique client identifier
+}
