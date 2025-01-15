@@ -18,11 +18,14 @@ headers.Add("Authorization", $"Bearer {token}");
 
 using var channel = GrpcChannel.ForAddress("https://localhost:5001");
 var client = new Greeter.GreeterClient(channel);
-
+/*
 var reply = await client.SayHelloAsync(new HelloRequest { Name = "World" }, headers);
 Console.WriteLine($"Greeting: {reply.Values}");
 
 await HftClient.Execute();
+*/
+
+await HftClient.LongRunningProcess();
 
 async Task<string> GetTokenAsync(string username)
 {

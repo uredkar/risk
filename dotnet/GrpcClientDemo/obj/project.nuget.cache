@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "u674Gv2RPjQ=",
+  "dgSpecHash": "5JPJsppYpW4=",
   "success": true,
-  "projectFilePath": "C:\\sources\\risk\\dotnet\\GrpcClientDemo\\GrpcClientDemo.csproj",
+  "projectFilePath": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcClientDemo\\GrpcClientDemo.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\unmes\\.nuget\\packages\\google.protobuf\\3.29.2\\google.protobuf.3.29.2.nupkg.sha512",
     "C:\\Users\\unmes\\.nuget\\packages\\grpc.aspnetcore\\2.57.0\\grpc.aspnetcore.2.57.0.nupkg.sha512",

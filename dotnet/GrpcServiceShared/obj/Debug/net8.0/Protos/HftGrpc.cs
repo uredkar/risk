@@ -49,6 +49,14 @@ namespace GrpcServiceDemo {
     static readonly grpc::Marshaller<global::GrpcServiceDemo.SubscribeRequest> __Marshaller_hft_SubscribeRequest = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::GrpcServiceDemo.SubscribeRequest.Parser));
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
     static readonly grpc::Marshaller<global::GrpcServiceDemo.HftData> __Marshaller_hft_HftData = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::GrpcServiceDemo.HftData.Parser));
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Marshaller<global::GrpcServiceDemo.LongRunningRequest> __Marshaller_hft_LongRunningRequest = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::GrpcServiceDemo.LongRunningRequest.Parser));
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Marshaller<global::GrpcServiceDemo.LongRunningResponse> __Marshaller_hft_LongRunningResponse = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::GrpcServiceDemo.LongRunningResponse.Parser));
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Marshaller<global::GrpcServiceDemo.CallbackRequest> __Marshaller_hft_CallbackRequest = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::GrpcServiceDemo.CallbackRequest.Parser));
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Marshaller<global::GrpcServiceDemo.CallbackResponse> __Marshaller_hft_CallbackResponse = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::GrpcServiceDemo.CallbackResponse.Parser));
 
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
     static readonly grpc::Method<global::GrpcServiceDemo.SubscribeRequest, global::GrpcServiceDemo.HftData> __Method_StreamHftData = new grpc::Method<global::GrpcServiceDemo.SubscribeRequest, global::GrpcServiceDemo.HftData>(
@@ -57,6 +65,22 @@ namespace GrpcServiceDemo {
         "StreamHftData",
         __Marshaller_hft_SubscribeRequest,
         __Marshaller_hft_HftData);
+
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Method<global::GrpcServiceDemo.LongRunningRequest, global::GrpcServiceDemo.LongRunningResponse> __Method_StartProcess = new grpc::Method<global::GrpcServiceDemo.LongRunningRequest, global::GrpcServiceDemo.LongRunningResponse>(
+        grpc::MethodType.ServerStreaming,
+        __ServiceName,
+        "StartProcess",
+        __Marshaller_hft_LongRunningRequest,
+        __Marshaller_hft_LongRunningResponse);
+
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Method<global::GrpcServiceDemo.CallbackRequest, global::GrpcServiceDemo.CallbackResponse> __Method_RegisterCallback = new grpc::Method<global::GrpcServiceDemo.CallbackRequest, global::GrpcServiceDemo.CallbackResponse>(
+        grpc::MethodType.Unary,
+        __ServiceName,
+        "RegisterCallback",
+        __Marshaller_hft_CallbackRequest,
+        __Marshaller_hft_CallbackResponse);
 
     /// <summary>Service descriptor</summary>
     public static global::Google.Protobuf.Reflection.ServiceDescriptor Descriptor
@@ -70,6 +94,18 @@ namespace GrpcServiceDemo {
     {
       [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
       public virtual global::System.Threading.Tasks.Task StreamHftData(global::GrpcServiceDemo.SubscribeRequest request, grpc::IServerStreamWriter<global::GrpcServiceDemo.HftData> responseStream, grpc::ServerCallContext context)
+      {
+        throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
+      }
+
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::System.Threading.Tasks.Task StartProcess(global::GrpcServiceDemo.LongRunningRequest request, grpc::IServerStreamWriter<global::GrpcServiceDemo.LongRunningResponse> responseStream, grpc::ServerCallContext context)
+      {
+        throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
+      }
+
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::System.Threading.Tasks.Task<global::GrpcServiceDemo.CallbackResponse> RegisterCallback(global::GrpcServiceDemo.CallbackRequest request, grpc::ServerCallContext context)
       {
         throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
       }
@@ -113,6 +149,36 @@ namespace GrpcServiceDemo {
       {
         return CallInvoker.AsyncServerStreamingCall(__Method_StreamHftData, null, options, request);
       }
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncServerStreamingCall<global::GrpcServiceDemo.LongRunningResponse> StartProcess(global::GrpcServiceDemo.LongRunningRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return StartProcess(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncServerStreamingCall<global::GrpcServiceDemo.LongRunningResponse> StartProcess(global::GrpcServiceDemo.LongRunningRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.AsyncServerStreamingCall(__Method_StartProcess, null, options, request);
+      }
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::GrpcServiceDemo.CallbackResponse RegisterCallback(global::GrpcServiceDemo.CallbackRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return RegisterCallback(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::GrpcServiceDemo.CallbackResponse RegisterCallback(global::GrpcServiceDemo.CallbackRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.BlockingUnaryCall(__Method_RegisterCallback, null, options, request);
+      }
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncUnaryCall<global::GrpcServiceDemo.CallbackResponse> RegisterCallbackAsync(global::GrpcServiceDemo.CallbackRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return RegisterCallbackAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncUnaryCall<global::GrpcServiceDemo.CallbackResponse> RegisterCallbackAsync(global::GrpcServiceDemo.CallbackRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.AsyncUnaryCall(__Method_RegisterCallback, null, options, request);
+      }
       /// <summary>Creates a new instance of client from given <c>ClientBaseConfiguration</c>.</summary>
       [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
       protected override HftServiceClient NewInstance(ClientBaseConfiguration configuration)
@@ -127,7 +193,9 @@ namespace GrpcServiceDemo {
     public static grpc::ServerServiceDefinition BindService(HftServiceBase serviceImpl)
     {
       return grpc::ServerServiceDefinition.CreateBuilder()
-          .AddMethod(__Method_StreamHftData, serviceImpl.StreamHftData).Build();
+          .AddMethod(__Method_StreamHftData, serviceImpl.StreamHftData)
+          .AddMethod(__Method_StartProcess, serviceImpl.StartProcess)
+          .AddMethod(__Method_RegisterCallback, serviceImpl.RegisterCallback).Build();
     }
 
     /// <summary>Register service method with a service binder with or without implementation. Useful when customizing the service binding logic.
@@ -138,6 +206,8 @@ namespace GrpcServiceDemo {
     public static void BindService(grpc::ServiceBinderBase serviceBinder, HftServiceBase serviceImpl)
     {
       serviceBinder.AddMethod(__Method_StreamHftData, serviceImpl == null ? null : new grpc::ServerStreamingServerMethod<global::GrpcServiceDemo.SubscribeRequest, global::GrpcServiceDemo.HftData>(serviceImpl.StreamHftData));
+      serviceBinder.AddMethod(__Method_StartProcess, serviceImpl == null ? null : new grpc::ServerStreamingServerMethod<global::GrpcServiceDemo.LongRunningRequest, global::GrpcServiceDemo.LongRunningResponse>(serviceImpl.StartProcess));
+      serviceBinder.AddMethod(__Method_RegisterCallback, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::GrpcServiceDemo.CallbackRequest, global::GrpcServiceDemo.CallbackResponse>(serviceImpl.RegisterCallback));
     }
 
   }

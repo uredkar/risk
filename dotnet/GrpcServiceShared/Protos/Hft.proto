@@ -84,9 +84,29 @@ message HftMetadata {
 
 service HftService {
     rpc StreamHftData (SubscribeRequest) returns (stream HftData);
+    rpc StartProcess(LongRunningRequest) returns (stream LongRunningResponse);
+    rpc RegisterCallback(CallbackRequest) returns (CallbackResponse);
 }
 
 message SubscribeRequest {
   repeated string symbols = 1; // List of symbols to subscribe to
   string clientId = 2; // Unique client identifier
+}
+
+message LongRunningRequest {
+  string taskId = 1;
+}
+
+message LongRunningResponse {
+  string status = 1;
+  int32 progress = 2;
+}
+
+message CallbackRequest {
+  string taskId = 1;
+  string callbackUrl = 2;
+}
+
+message CallbackResponse {
+  string message = 1;
 }

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\sources\\risk\\dotnet\\GrpcServiceShared\\GrpcServiceShared.csproj": {}
+    "C:\\sources\\newrisk\\risk\\dotnet\\GrpcServiceShared\\GrpcServiceShared.csproj": {}
   },
   "projects": {
-    "C:\\sources\\risk\\dotnet\\GrpcServiceShared\\GrpcServiceShared.csproj": {
+    "C:\\sources\\newrisk\\risk\\dotnet\\GrpcServiceShared\\GrpcServiceShared.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\sources\\risk\\dotnet\\GrpcServiceShared\\GrpcServiceShared.csproj",
+        "projectUniqueName": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcServiceShared\\GrpcServiceShared.csproj",
         "projectName": "GrpcServiceShared",
-        "projectPath": "C:\\sources\\risk\\dotnet\\GrpcServiceShared\\GrpcServiceShared.csproj",
+        "projectPath": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcServiceShared\\GrpcServiceShared.csproj",
         "packagesPath": "C:\\Users\\unmes\\.nuget\\packages\\",
-        "outputPath": "C:\\sources\\risk\\dotnet\\GrpcServiceShared\\obj\\",
+        "outputPath": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcServiceShared\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages",
