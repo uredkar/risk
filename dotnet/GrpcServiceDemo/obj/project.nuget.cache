@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "gRbmUU/GxW8=",
+  "dgSpecHash": "hLGSqqWmagc=",
   "success": true,
   "projectFilePath": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcServiceDemo\\GrpcServiceDemo.csproj",
   "expectedPackageFiles": [
@@ -29,7 +29,8 @@
     "C:\\Users\\unmes\\.nuget\\packages\\microsoft.identitymodel.tokens\\8.0.1\\microsoft.identitymodel.tokens.8.0.1.nupkg.sha512",
     "C:\\Users\\unmes\\.nuget\\packages\\system.diagnostics.diagnosticsource\\6.0.0\\system.diagnostics.diagnosticsource.6.0.0.nupkg.sha512",
     "C:\\Users\\unmes\\.nuget\\packages\\system.identitymodel.tokens.jwt\\8.0.1\\system.identitymodel.tokens.jwt.8.0.1.nupkg.sha512",
-    "C:\\Users\\unmes\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\6.0.0\\system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512"
+    "C:\\Users\\unmes\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\6.0.0\\system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512",
+    "C:\\Users\\unmes\\.nuget\\packages\\zookeepernetex\\3.4.12.4\\zookeepernetex.3.4.12.4.nupkg.sha512"
   ],
   "logs": []
 }

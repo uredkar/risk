@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "QixJ70882ACQYz4+2VZ0DV7tEmLRY3npEvA57pZP+KU=",
+  "Hash": "u2gKxQxVVArmq+91frTTpS7gKVTAZ8FJH+ku7RGnQ14=",
   "Source": "GrpcServiceDemo",
   "BasePath": "_content/GrpcServiceDemo",
   "Mode": "Default",
@@ -11,10 +11,10 @@
       "Version": 2,
       "Source": "GrpcServiceShared",
       "GetPublishAssetsTargets": "ComputeReferencedStaticWebAssetsPublishManifest;GetCurrentProjectPublishStaticWebAssetItems",
-      "AdditionalPublishProperties": "",
+      "AdditionalPublishProperties": "Configuration=Debug;Platform=AnyCPU",
       "AdditionalPublishPropertiesToRemove": "WebPublishProfileFile;TargetFramework",
       "GetBuildAssetsTargets": "GetCurrentProjectBuildStaticWebAssetItems",
-      "AdditionalBuildProperties": "",
+      "AdditionalBuildProperties": "Configuration=Debug;Platform=AnyCPU",
       "AdditionalBuildPropertiesToRemove": "WebPublishProfileFile;TargetFramework"
     }
   ],

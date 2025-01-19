@@ -62,3 +62,4 @@ C:\sources\newrisk\risk\dotnet\GrpcClientDemo\obj\Debug\net9.0\refint\GrpcClient
 C:\sources\newrisk\risk\dotnet\GrpcClientDemo\obj\Debug\net9.0\GrpcClientDemo.pdb
 C:\sources\newrisk\risk\dotnet\GrpcClientDemo\obj\Debug\net9.0\GrpcClientDemo.genruntimeconfig.cache
 C:\sources\newrisk\risk\dotnet\GrpcClientDemo\obj\Debug\net9.0\ref\GrpcClientDemo.dll
+C:\sources\newrisk\risk\dotnet\GrpcClientDemo\bin\Debug\net9.0\ZooKeeperNetEx.dll

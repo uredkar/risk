@@ -3,8 +3,30 @@
   "WorkspaceRootPath": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcServiceDemo\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{00DDB633-62F2-421C-9FD0-A540C76224DE}|..\\GrpcClientDemo\\GrpcClientDemo.csproj|c:\\sources\\newrisk\\risk\\dotnet\\grpcclientdemo\\loadbalancer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A920CC83-C546-47C8-B325-4559EB0E6035}|GrpcServiceDemo.csproj|c:\\sources\\newrisk\\risk\\dotnet\\grpcservicedemo\\loadbalancer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A920CC83-C546-47C8-B325-4559EB0E6035}|GrpcServiceDemo.csproj|solutionrelative:loadbalancer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A920CC83-C546-47C8-B325-4559EB0E6035}|GrpcServiceDemo.csproj|c:\\sources\\newrisk\\risk\\dotnet\\grpcservicedemo\\services\\hftservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A920CC83-C546-47C8-B325-4559EB0E6035}|GrpcServiceDemo.csproj|solutionrelative:services\\hftservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A920CC83-C546-47C8-B325-4559EB0E6035}|GrpcServiceDemo.csproj|c:\\sources\\newrisk\\risk\\dotnet\\grpcservicedemo\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A920CC83-C546-47C8-B325-4559EB0E6035}|GrpcServiceDemo.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A920CC83-C546-47C8-B325-4559EB0E6035}|GrpcServiceDemo.csproj|c:\\sources\\newrisk\\risk\\dotnet\\grpcservicedemo\\services\\greeterservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A920CC83-C546-47C8-B325-4559EB0E6035}|GrpcServiceDemo.csproj|solutionrelative:services\\greeterservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A920CC83-C546-47C8-B325-4559EB0E6035}|GrpcServiceDemo.csproj|c:\\sources\\newrisk\\risk\\dotnet\\grpcservicedemo\\logginginterceptor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A920CC83-C546-47C8-B325-4559EB0E6035}|GrpcServiceDemo.csproj|solutionrelative:logginginterceptor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{239DA5EC-B46D-4128-9E67-DB31BABC5E6E}|..\\GrpcServiceShared\\GrpcServiceShared.csproj|c:\\sources\\newrisk\\risk\\dotnet\\grpcserviceshared\\protos\\hft.proto||{3B902123-F8A7-4915-9F01-361F908088D0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{00DDB633-62F2-421C-9FD0-A540C76224DE}|..\\GrpcClientDemo\\GrpcClientDemo.csproj|c:\\sources\\newrisk\\risk\\dotnet\\grpcclientdemo\\hftclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
@@ -15,9 +37,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{A920CC83-C546-47C8-B325-4559EB0E6035}|GrpcServiceDemo.csproj|c:\\sources\\newrisk\\risk\\dotnet\\grpcservicedemo\\services\\peopleservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A920CC83-C546-47C8-B325-4559EB0E6035}|GrpcServiceDemo.csproj|solutionrelative:services\\peopleservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{239DA5EC-B46D-4128-9E67-DB31BABC5E6E}|..\\GrpcServiceShared\\GrpcServiceShared.csproj|c:\\sources\\newrisk\\risk\\dotnet\\grpcserviceshared\\protos\\hft.proto||{3B902123-F8A7-4915-9F01-361F908088D0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{239DA5EC-B46D-4128-9E67-DB31BABC5E6E}|..\\GrpcServiceShared\\GrpcServiceShared.csproj|c:\\sources\\newrisk\\risk\\dotnet\\grpcserviceshared\\protos\\greet.proto||{3B902123-F8A7-4915-9F01-361F908088D0}"
@@ -33,11 +52,102 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "GreeterService.cs",
+              "DocumentMoniker": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcServiceDemo\\Services\\GreeterService.cs",
+              "RelativeDocumentMoniker": "Services\\GreeterService.cs",
+              "ToolTip": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcServiceDemo\\Services\\GreeterService.cs",
+              "RelativeToolTip": "Services\\GreeterService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-17T17:26:04.118Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "LoadBalancer.cs",
+              "DocumentMoniker": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcClientDemo\\LoadBalancer.cs",
+              "RelativeDocumentMoniker": "..\\GrpcClientDemo\\LoadBalancer.cs",
+              "ToolTip": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcClientDemo\\LoadBalancer.cs",
+              "RelativeToolTip": "..\\GrpcClientDemo\\LoadBalancer.cs",
+              "ViewState": "AgIAACAAAAAAAAAAAAAgwAoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-17T16:39:51.596Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 1,
+              "Title": "LoadBalancer.cs",
+              "DocumentMoniker": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcServiceDemo\\LoadBalancer.cs",
+              "RelativeDocumentMoniker": "LoadBalancer.cs",
+              "ToolTip": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcServiceDemo\\LoadBalancer.cs",
+              "RelativeToolTip": "LoadBalancer.cs",
+              "ViewState": "AgIAAA0AAAAAAAAAAAAQwAgAAABAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-17T16:39:28.932Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "HFTService.cs",
+              "DocumentMoniker": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcServiceDemo\\Services\\HFTService.cs",
+              "RelativeDocumentMoniker": "Services\\HFTService.cs",
+              "ToolTip": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcServiceDemo\\Services\\HFTService.cs",
+              "RelativeToolTip": "Services\\HFTService.cs",
+              "ViewState": "AgIAAHEAAAAAAAAAAAAMwIAAAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-15T21:37:38.01Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "LoggingInterceptor.cs",
+              "DocumentMoniker": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcServiceDemo\\LoggingInterceptor.cs",
+              "RelativeDocumentMoniker": "LoggingInterceptor.cs",
+              "ToolTip": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcServiceDemo\\LoggingInterceptor.cs",
+              "RelativeToolTip": "LoggingInterceptor.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-17T17:25:32.268Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcServiceDemo\\Program.cs",
+              "RelativeDocumentMoniker": "Program.cs",
+              "ToolTip": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcServiceDemo\\Program.cs",
+              "RelativeToolTip": "Program.cs",
+              "ViewState": "AgIAACEAAAAAAAAAAAAAADEAAAAEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-17T17:25:37.352Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcClientDemo\\Program.cs",
+              "RelativeDocumentMoniker": "..\\GrpcClientDemo\\Program.cs",
+              "ToolTip": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcClientDemo\\Program.cs",
+              "RelativeToolTip": "..\\GrpcClientDemo\\Program.cs",
+              "ViewState": "AgIAAAsAAAAAAAAAAIBJwBsAAAAiAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-15T21:58:43.591Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
               "Title": "HftClient.cs",
               "DocumentMoniker": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcClientDemo\\HftClient.cs",
               "RelativeDocumentMoniker": "..\\GrpcClientDemo\\HftClient.cs",
@@ -50,46 +160,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "Program.cs",
-              "DocumentMoniker": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcClientDemo\\Program.cs",
-              "RelativeDocumentMoniker": "..\\GrpcClientDemo\\Program.cs",
-              "ToolTip": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcClientDemo\\Program.cs",
-              "RelativeToolTip": "..\\GrpcClientDemo\\Program.cs",
-              "ViewState": "AgIAAA4AAAAAAAAAAAAAABsAAAAiAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-15T21:58:43.591Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 6,
               "Title": "Hft.proto",
               "DocumentMoniker": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcServiceShared\\Protos\\Hft.proto",
               "RelativeDocumentMoniker": "..\\GrpcServiceShared\\Protos\\Hft.proto",
               "ToolTip": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcServiceShared\\Protos\\Hft.proto",
               "RelativeToolTip": "..\\GrpcServiceShared\\Protos\\Hft.proto",
-              "ViewState": "AgIAAE4AAAAAAAAAAAAAwHAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAE4AAAAAAAAAAAAAwFwAAAAyAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003853|",
               "WhenOpened": "2025-01-15T21:48:38.715Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "HFTService.cs",
-              "DocumentMoniker": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcServiceDemo\\Services\\HFTService.cs",
-              "RelativeDocumentMoniker": "Services\\HFTService.cs",
-              "ToolTip": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcServiceDemo\\Services\\HFTService.cs",
-              "RelativeToolTip": "Services\\HFTService.cs",
-              "ViewState": "AgIAAFcAAAAAAAAAAAAAAFcAAAANAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-15T21:37:38.01Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 9,
               "Title": "PeopleService.cs",
               "DocumentMoniker": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcServiceDemo\\Services\\PeopleService.cs",
               "RelativeDocumentMoniker": "Services\\PeopleService.cs",
@@ -102,20 +186,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 10,
               "Title": "greet.proto",
               "DocumentMoniker": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcServiceShared\\Protos\\greet.proto",
               "RelativeDocumentMoniker": "..\\GrpcServiceShared\\Protos\\greet.proto",
               "ToolTip": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcServiceShared\\Protos\\greet.proto",
               "RelativeToolTip": "..\\GrpcServiceShared\\Protos\\greet.proto",
-              "ViewState": "AgIAABgAAAAAAAAAAAAAACcAAAAQAAAAAAAAAA==",
+              "ViewState": "AgIAABUAAAAAAAAAAIBJwCcAAAAQAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003853|",
               "WhenOpened": "2025-01-14T23:27:59.478Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 11,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcServiceShared\\Program.cs",
               "RelativeDocumentMoniker": "..\\GrpcServiceShared\\Program.cs",
@@ -123,7 +207,8 @@
               "RelativeToolTip": "..\\GrpcServiceShared\\Program.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAAlAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-14T23:27:30.705Z"
+              "WhenOpened": "2025-01-14T23:27:30.705Z",
+              "EditorCaption": ""
             }
           ]
         }

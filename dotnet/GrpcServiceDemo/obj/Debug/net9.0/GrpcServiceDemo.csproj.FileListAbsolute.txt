@@ -103,3 +103,5 @@ C:\sources\newrisk\risk\dotnet\GrpcServiceDemo\obj\Debug\net9.0\refint\GrpcServi
 C:\sources\newrisk\risk\dotnet\GrpcServiceDemo\obj\Debug\net9.0\GrpcServiceDemo.pdb
 C:\sources\newrisk\risk\dotnet\GrpcServiceDemo\obj\Debug\net9.0\GrpcServiceDemo.genruntimeconfig.cache
 C:\sources\newrisk\risk\dotnet\GrpcServiceDemo\obj\Debug\net9.0\ref\GrpcServiceDemo.dll
+C:\sources\newrisk\risk\dotnet\GrpcServiceDemo\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
+C:\sources\newrisk\risk\dotnet\GrpcServiceDemo\bin\Debug\net9.0\ZooKeeperNetEx.dll

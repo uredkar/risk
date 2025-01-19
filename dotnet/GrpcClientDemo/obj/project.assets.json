@@ -300,6 +300,19 @@
           "buildTransitive/netcoreapp3.1/_._": {}
         }
       },
+      "ZooKeeperNetEx/3.4.12.4": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/ZooKeeperNetEx.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/ZooKeeperNetEx.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "GrpcServiceShared/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v8.0",
@@ -798,6 +811,22 @@
         "useSharedDesignerContext.txt"
       ]
     },
+    "ZooKeeperNetEx/3.4.12.4": {
+      "sha512": "YECtByVSH7TRjQKplwOWiKyanCqYE5eEkGk5YtHJgsnbZ6+p1o0Gvs5RIsZLotiAVa6Niez1BJyKY/RDY/L6zg==",
+      "type": "package",
+      "path": "zookeepernetex/3.4.12.4",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "ZooKeeperNetEx.png",
+        "lib/net461/ZooKeeperNetEx.dll",
+        "lib/net461/ZooKeeperNetEx.xml",
+        "lib/netstandard2.0/ZooKeeperNetEx.dll",
+        "lib/netstandard2.0/ZooKeeperNetEx.xml",
+        "zookeepernetex.3.4.12.4.nupkg.sha512",
+        "zookeepernetex.nuspec"
+      ]
+    },
     "GrpcServiceShared/1.0.0": {
       "type": "project",
       "path": "../GrpcServiceShared/GrpcServiceShared.csproj",
@@ -808,7 +837,8 @@
     "net9.0": [
       "Grpc.Net.Client >= 2.67.0",
       "Grpc.Tools >= 2.68.1",
-      "GrpcServiceShared >= 1.0.0"
+      "GrpcServiceShared >= 1.0.0",
+      "ZooKeeperNetEx >= 3.4.12.4"
     ]
   },
   "packageFolders": {
@@ -875,6 +905,10 @@
             "suppressParent": "All",
             "target": "Package",
             "version": "[2.68.1, )"
+          },
+          "ZooKeeperNetEx": {
+            "target": "Package",
+            "version": "[3.4.12.4, )"
           }
         },
         "imports": [

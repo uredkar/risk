@@ -63,6 +63,10 @@
               "suppressParent": "All",
               "target": "Package",
               "version": "[2.68.1, )"
+            },
+            "ZooKeeperNetEx": {
+              "target": "Package",
+              "version": "[3.4.12.4, )"
             }
           },
           "imports": [

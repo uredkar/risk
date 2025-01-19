@@ -75,3 +75,4 @@ C:\sources\newrisk\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\refint\GrpcSer
 C:\sources\newrisk\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\GrpcServiceShared.pdb
 C:\sources\newrisk\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\GrpcServiceShared.genruntimeconfig.cache
 C:\sources\newrisk\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\ref\GrpcServiceShared.dll
+C:\sources\newrisk\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

@@ -23,3 +23,7 @@ C:\sources\newrisk\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\staticwebasset
 C:\sources\newrisk\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\staticwebassets.build.json
 C:\sources\newrisk\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\staticwebassets.build.json
 C:\sources\newrisk\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\staticwebassets.build.json
+C:\sources\newrisk\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\staticwebassets.build.json
+C:\sources\newrisk\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\staticwebassets.build.json
+C:\sources\newrisk\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\staticwebassets.build.json
+C:\sources\newrisk\risk\dotnet\GrpcServiceShared\obj\Debug\net8.0\staticwebassets.build.json

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "5JPJsppYpW4=",
+  "dgSpecHash": "hBied+iusrQ=",
   "success": true,
   "projectFilePath": "C:\\sources\\newrisk\\risk\\dotnet\\GrpcClientDemo\\GrpcClientDemo.csproj",
   "expectedPackageFiles": [
@@ -21,7 +21,8 @@
     "C:\\Users\\unmes\\.nuget\\packages\\microsoft.extensions.options\\6.0.0\\microsoft.extensions.options.6.0.0.nupkg.sha512",
     "C:\\Users\\unmes\\.nuget\\packages\\microsoft.extensions.primitives\\6.0.0\\microsoft.extensions.primitives.6.0.0.nupkg.sha512",
     "C:\\Users\\unmes\\.nuget\\packages\\system.diagnostics.diagnosticsource\\6.0.0\\system.diagnostics.diagnosticsource.6.0.0.nupkg.sha512",
-    "C:\\Users\\unmes\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\6.0.0\\system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512"
+    "C:\\Users\\unmes\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\6.0.0\\system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512",
+    "C:\\Users\\unmes\\.nuget\\packages\\zookeepernetex\\3.4.12.4\\zookeepernetex.3.4.12.4.nupkg.sha512"
   ],
   "logs": []
 }
