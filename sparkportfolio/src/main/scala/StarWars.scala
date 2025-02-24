@@ -3,11 +3,13 @@ package sql
 //import buildinfo.BuildInfo.inputDirectory
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
 import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.functions.split
 
 //import scala3encoders.given
 
 object StarWarsData {
   val spark = SparkSession.builder().master("local").getOrCreate
+  spark.sparkContext.setLogLevel("WARN")
   import spark.implicits._
 
   case class Friends(name: String, friends: String)
@@ -51,7 +53,11 @@ object StarWarsData {
     .option("header", "true")
     .option("delimiter", ",")
     .option("inferSchema", "true")
-    .csv("C:/sources/risk/sparkportfolio/spark-warehouse/starwars.csv")
+    .csv("C:/sources/newrisk/risk/sparkportfolio/spark-warehouse/starwars.csv")
+    
+  df.createOrReplaceTempView("starwars")
+  
+
 
   // going via java interface here of DataFrame map function here
   val characters = df
@@ -89,6 +95,9 @@ object StarWarsData {
     }
 
   val sw_df = characters.join(friends, Seq("name"))
+  friends.createOrReplaceTempView("friends")
+  characters.createOrReplaceTempView("characters")
+  sw_df.createOrReplaceTempView("withfriends")
 
   case class SW(
       name: String,
@@ -109,10 +118,62 @@ object StarWar {
   def main(args: Array[String]): Unit = {
     import StarWarsData._
     try {
-      friends.show()
-      dsMissing.show()
-      characters.show()
-      sw_ds.show()
+      
+      //friends.show()
+      //dsMissing.show()
+      //characters.show()
+      //sw_ds.show()
+      //spark.sql("select  to_date('2009-07-30 04:17:52') as tdate,current_date() as cd, eyecolor,species,count(*) as cnt from starwars group by eyecolor,species").show()
+      //spark.sql("select name, split(friends,',')[0] as friend1,split(friends,',')[1] as friend2  from friends").show()
+      //spark.sql("select  exists(array(1, 2, 3), x -> x % 2 == 0) as arr, * from characters").show()
+      //spark.sql("""select name,species, height, dense_rank(height) over(partition by species order by height desc) as dr,  
+      //                    rank(height) over(partition by species order by height desc) as r  
+      //                   from withfriends where eyecolor = 'blue'
+      //          """).show()
+      spark.sql("""with 
+                   s1 as (select *
+                          from withfriends 
+                          )
+                  select *
+                  from s1 
+                """).show()
+      spark.sql("""with 
+                   s1 as (select species, collect_set(height) as hs, collect_set(name) as names, 
+                          collect_list(height) as hls, collect_list(name) as nls
+                          from withfriends group by species
+                          )
+                  select species, explode(hs) as ehs, 
+                         size(hs) as sz, size(names) as sz2, size(hls) as sz3, size(nls) as sz4
+                  from s1 
+                """).show()
+              
+      spark.sql("""
+                SELECT
+                    from_csv(csv_string, 'id INT, name STRING, age INT', map('sep', ',')) AS parsed_csv
+                FROM
+                    (SELECT '1,Alice,30' AS csv_string);
+                """).show()
+
+      spark.sql("""
+          WITH sales_data AS (
+            SELECT 'North' AS region, 'Laptop' AS product, 100 AS sales_amount UNION ALL
+            SELECT 'North' AS region, 'Tablet' AS product, 150 AS sales_amount UNION ALL
+            SELECT 'South' AS region, 'Laptop' AS product, 120 AS sales_amount UNION ALL
+            SELECT 'South' AS region, 'Phone' AS product, 80 AS sales_amount UNION ALL
+            SELECT 'East' AS region, 'Tablet' AS product, 90 AS sales_amount 
+          )
+          SELECT
+            region,
+            product,
+            SUM(sales_amount) AS total_sales
+          FROM
+            sales_data
+          GROUP BY
+            CUBE(region, product)
+          ORDER BY
+            region, product;
+          """).show()        
+
     }
     finally {
       spark.close()
