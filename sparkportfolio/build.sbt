@@ -24,6 +24,7 @@ libraryDependencies += "org.apache.spark" %% "spark-streaming" % sparkVersion
 libraryDependencies += "org.apache.kafka" % "kafka-clients" % "3.5.2"
 libraryDependencies += "org.apache.parquet" % "parquet-hadoop" % "1.14.1"
 libraryDependencies += "org.apache.spark" %% "spark-core" % sparkVersion
-
+//libraryDependencies += "io.delta" %% "delta-spark" % sparkVersion
+libraryDependencies += "io.delta" %% "delta-spark" % "3.3.0"
 dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-databind" % "2.15.0"
 dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-core" % "2.15.0"

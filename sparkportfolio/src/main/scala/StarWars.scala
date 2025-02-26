@@ -153,26 +153,89 @@ object StarWar {
                 FROM
                     (SELECT '1,Alice,30' AS csv_string);
                 """).show()
-
-      spark.sql("""
+      val sql1 = """
           WITH sales_data AS (
             SELECT 'North' AS region, 'Laptop' AS product, 100 AS sales_amount UNION ALL
             SELECT 'North' AS region, 'Tablet' AS product, 150 AS sales_amount UNION ALL
             SELECT 'South' AS region, 'Laptop' AS product, 120 AS sales_amount UNION ALL
             SELECT 'South' AS region, 'Phone' AS product, 80 AS sales_amount UNION ALL
             SELECT 'East' AS region, 'Tablet' AS product, 90 AS sales_amount 
+          ),
+          cube_sales AS (
+            SELECT
+              region,
+              product,
+              SUM(sales_amount) AS total_sales
+            FROM
+              sales_data
+            GROUP BY
+              CUBE(region, product)
+          ),
+          rollup_sales AS (
+            SELECT
+              region,
+              product,
+              SUM(sales_amount) AS total_sales
+            FROM
+              sales_data
+            GROUP BY
+              ROLLUP(region, product)
           )
-          SELECT
+          """ 
+      
+      spark.sql(sql1 + """
+            SELECT
+              'CUBE' AS operation,
+              region,
+              product,
+              total_sales
+            FROM
+              cube_sales;""").show()
+
+      spark.sql(sql1 + """
+            select
+            'ROLLUP' AS operation,
             region,
             product,
-            SUM(sales_amount) AS total_sales
-          FROM
-            sales_data
-          GROUP BY
-            CUBE(region, product)
-          ORDER BY
-            region, product;
+            total_sales
+            from rollup_sales;
           """).show()        
+
+          
+        spark.sql(sql1 + """
+                SELECT
+                  region,
+                  product,
+                  SUM(sales_amount) AS total_sales
+                FROM
+                    sales_data
+                GROUP BY
+                    CUBE(region, product)
+                HAVING GROUPING(region) = 1 AND GROUPING(product) = 0;
+              """).show()
+        spark.sql(sql1 + """
+                SELECT
+                  region,
+                  product,
+                  SUM(sales_amount) AS total_sales
+                FROM
+                    sales_data
+                GROUP BY
+                    ROLLUP(region, product)
+                HAVING GROUPING(region) = 1 AND GROUPING(product) = 0;
+              """).show()
+              
+        spark.sql(sql1 + """
+                SELECT
+                  region,
+                  product,
+                  SUM(sales_amount) AS total_sales
+                FROM
+                    sales_data
+                GROUP BY
+                    GROUPING SETS((region, product), (region), (product))
+                HAVING GROUPING(region) = 1 AND GROUPING(product) = 0;
+              """).show()
 
     }
     finally {
