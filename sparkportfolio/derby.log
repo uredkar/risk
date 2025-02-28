@@ -1,0 +1,13 @@
+----------------------------------------------------------------
+Fri Feb 28 10:21:31 CST 2025:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.14.1.0 - (1808820): instance a816c00e-0195-4d5c-ee52-00002f8b2e08 
+on database directory C:\sources\newrisk\risk\sparkportfolio\metastore_db with class loader sbt.internal.LayeredClassLoader@3eb4bb8c 
+Loaded from file:/C:/sources/newrisk/risk/sparkportfolio/target/bg-jobs/sbt_6dbf09b8/target/15196d98/f7d3a9d0/derby-10.14.1.0.jar
+java.vendor=Oracle Corporation
+java.runtime.version=11.0.18+9-LTS-195
+user.dir=C:\sources\newrisk\risk\sparkportfolio
+os.name=Windows 10
+os.arch=amd64
+os.version=10.0
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
