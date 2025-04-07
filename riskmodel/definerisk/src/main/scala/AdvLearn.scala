@@ -1,12 +1,13 @@
 import com.definerisk.core.models.{*,given}
 import com.definerisk.core.utils.YamlUtil.{*,given}
+import com.definerisk.core.dsl.{*,given}
 import cats.data.Validated
 import cats.Functor
 import cats.implicits._
 import cats.free.Free
 import cats.Id
 import cats.~>
-import com.definerisk.core.dsl.{*,given}
+
 import java.io.PrintWriter
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -20,35 +21,35 @@ import java.io.{File, FileWriter, PrintWriter}
 def firstElement[F[_], A](container: F[A])(using MyContainer[F]): A = 
     summon[MyContainer[F]].get(container)
 
-trait Functor[F[_]]:
+trait MyFunctor[F[_]]:
   def map[A, B](fa: F[A])(f: A => B): F[B]
 
-object Functor:
-  def apply[F[_]](using functor: Functor[F]): Functor[F] = functor
+object MyFunctor:
+  def apply[F[_]](using MyFunctor: MyFunctor[F]): MyFunctor[F] = MyFunctor
 
-  given Functor[List] with
+  given MyFunctor[List] with
     def map[A, B](fa: List[A])(f: A => B): List[B] = fa.map(f)
 
-  given Functor[Option] with
+  given MyFunctor[Option] with
     def map[A, B](fa: Option[A])(f: A => B): Option[B] = fa.map(f)
 
-extension [F[_]](functor: Functor[F]) // Attach extensions to an explicit parameter
-  def compose[G[_]](using Functor[G]): Functor[[A] =>> F[G[A]]] =
-    new Functor[[A] =>> F[G[A]]]:
+extension [F[_]](MyFunctor: MyFunctor[F]) // Attach extensions to an explicit parameter
+  def compose[G[_]](using MyFunctor[G]): MyFunctor[[A] =>> F[G[A]]] =
+    new MyFunctor[[A] =>> F[G[A]]]:
       def map[A, B](fa: F[G[A]])(f: A => B): F[G[B]] =
-        functor.map(fa)(ga => summon[Functor[G]].map(ga)(f))
+        MyFunctor.map(fa)(ga => summon[MyFunctor[G]].map(ga)(f))
 
 
-def transform[F[_]: Functor, A, B](fa: F[A])(f: A => B): F[B] =
-  summon[Functor[F]].map(fa)(f)
+def transform[F[_]: MyFunctor, A, B](fa: F[A])(f: A => B): F[B] =
+  summon[MyFunctor[F]].map(fa)(f)
 
 trait MyHigherKind[F[_]]
 
 val eitherExample: MyHigherKind[[X] =>> Either[String, X]] = 
   new MyHigherKind[[X] =>> Either[String, X]] {}
 
-def validate[F[_]: Functor, A](fa: F[A]): F[String] =
-  summon[Functor[F]].map(fa)(_.toString)
+def validate[F[_]: MyFunctor, A](fa: F[A]): F[String] =
+  summon[MyFunctor[F]].map(fa)(_.toString)
 
 type MyValidated[A] = Validated[List[String], A]
 
@@ -56,17 +57,17 @@ type MyValidated[A] = Validated[List[String], A]
 val result = (1.valid[List[String]], 2.valid[List[String]]).mapN(_ + _)
 
 
-def processData[F[_]: Functor](container: F[Int]): F[Int] =
-  summon[Functor[F]].map(container)(_ * 2)
+def processData[F[_]: MyFunctor](container: F[Int]): F[Int] =
+  summon[MyFunctor[F]].map(container)(_ * 2)
 
-given functorForValidatedNothing: Functor[[A] =>> Validated[Nothing, A]] with
+given MyFunctorForValidatedNothing: MyFunctor[[A] =>> Validated[Nothing, A]] with
   def map[A, B](fa: Validated[Nothing, A])(f: A => B): Validated[Nothing, B] = 
     fa.map(f)
 
-given Functor[Option] with
+given MyFunctor[Option] with
   def map[A, B](fa: Option[A])(f: A => B): Option[B] = fa.map(f)
 
-given Functor[List] with
+given MyFunctor[List] with
   def map[A, B](fa: List[A])(f: A => B): List[B] = fa.map(f)
 
  
@@ -95,7 +96,7 @@ def sum[A: Monoid](xs: List[A])(using m: Monoid[A]): A = {
 
 
 
-trait Monad[F[_]] extends Functor[F]:
+trait Monad[F[_]] extends MyFunctor[F]:
   def pure[A](a: A): F[A]
   def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B]
 
@@ -117,12 +118,12 @@ object Monad:
 final case class OptionT[F[_], A](value: F[Option[A]]):
 
   // Lifts a pure value into OptionT
-  def pure[B](b: B)(using functor: Functor[F]): OptionT[F, B] =
-    OptionT(functor.map(value)(_ => Some(b)))
+  def pure[B](b: B)(using MyFunctor: MyFunctor[F]): OptionT[F, B] =
+    OptionT(MyFunctor.map(value)(_ => Some(b)))
 
   // Maps over the inner value
-  def map[B](f: A => B)(using functor: Functor[F]): OptionT[F, B] =
-    OptionT(functor.map(value)(_.map(f)))
+  def map[B](f: A => B)(using MyFunctor: MyFunctor[F]): OptionT[F, B] =
+    OptionT(MyFunctor.map(value)(_.map(f)))
 
   // FlatMaps over the transformer
   def flatMap[B](f: A => OptionT[F, B])(using monad: Monad[F]): OptionT[F, B] =
@@ -132,10 +133,10 @@ final case class OptionT[F[_], A](value: F[Option[A]]):
     })
 
 
-class SafeContainer[F[_]](val data: F[Option[Int]])(using functor: Functor[F]) {
+class SafeContainer[F[_]](val data: F[Option[Int]])(using MyFunctor: MyFunctor[F]) {
   // Method to map over the inner Option
   def mapInner[B](f: Int => B): F[Option[B]] = {
-    functor.map(data) {
+    MyFunctor.map(data) {
         case Some(value) => 
             val transformed : B = f(value)
             println(s"Mapping value: $value to \"$transformed\"") 
@@ -146,9 +147,9 @@ class SafeContainer[F[_]](val data: F[Option[Int]])(using functor: Functor[F]) {
 
   // Method to extract values safely
   def extractOrElse(default: Int): F[Int] = {
-    //val functorInstance = summon[Functor[F]]
-    //functorInstance.map(data)(_.getOrElse(default))
-    functor.map(data)(_.getOrElse(default))
+    //val MyFunctorInstance = summon[MyFunctor[F]]
+    //MyFunctorInstance.map(data)(_.getOrElse(default))
+    MyFunctor.map(data)(_.getOrElse(default))
   }
 }
 
@@ -431,8 +432,8 @@ def test_optionT() =
     import scala.concurrent.{Future, ExecutionContext}
     import scala.concurrent.ExecutionContext.Implicits.global
 
-    // Define a Functor and Monad for Future
-    given Functor[Future] with
+    // Define a MyFunctor and Monad for Future
+    given MyFunctor[Future] with
         def map[A, B](fa: Future[A])(f: A => B): Future[B] = fa.map(f)
 
     given Monad[Future] with
@@ -448,24 +449,24 @@ def test_optionT() =
     result.value.foreach(println) // Outputs: Some(86)
 
 def test_mycompose() =
-    def my_compose[F[_], G[_]](using ff: Functor[F], gf: Functor[G]): Functor[[A] =>> F[G[A]]] =
-        new Functor[[A] =>> F[G[A]]]:
+    def my_compose[F[_], G[_]](using ff: MyFunctor[F], gf: MyFunctor[G]): MyFunctor[[A] =>> F[G[A]]] =
+        new MyFunctor[[A] =>> F[G[A]]]:
             def map[A, B](fa: F[G[A]])(f: A => B): F[G[B]] =
                 ff.map(fa)(ga => gf.map(ga)(f))
 
-    given Functor[List] with
+    given MyFunctor[List] with
         def map[A, B](fa: List[A])(f: A => B): List[B] = fa.map(f)
 
-    val composedFunctor2 = my_compose[Option, List]
+    val composedMyFunctor2 = my_compose[Option, List]
     val nested = Some(List(1, 2, 3))
-    val r2 = composedFunctor2.map(nested)(_ * 2)
+    val r2 = composedMyFunctor2.map(nested)(_ * 2)
     println("testing compose")
     println(r2) // Some(List(2, 4, 6)
 
-    val optionListFunctor = Functor[Option].compose[List]
+    val optionListMyFunctor = MyFunctor[Option].compose[List]
 
     val nestedStructure: Option[List[Int]] = nested
-    val r3 = optionListFunctor.map(nestedStructure)(_ + 10)
+    val r3 = optionListMyFunctor.map(nestedStructure)(_ + 10)
 
     println(r3) // Output: Some(List(11, 12, 13))
 
@@ -535,8 +536,8 @@ def test_typed_lambda() =
 
     val r1 = nested.map(_.map(_ * 2))
     println(r1)
-    val composedFunctor1 = Functor[Option].compose[List]
-    val c1 = composedFunctor1.map(nested)(_ * 2)
+    val composedMyFunctor1 = MyFunctor[Option].compose[List]
+    val c1 = composedMyFunctor1.map(nested)(_ * 2)
     
     println(c1)
     test_mycompose()

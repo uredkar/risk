@@ -87,7 +87,7 @@ case class Node[A](value: A, prev: DoublyLinkedList[A], next: DoublyLinkedList[A
 
 
 case class Stock(symbol: String, price: Double)
-case class Option(symbol: String, strikePrice: Double, expiryDate: String)
+case class StockOption(symbol: String, strikePrice: Double, expiryDate: String)
 case class Trade(id: String, amount: Double)
 
 case class DLList[A](head: DoublyLinkedList[A], tail: DoublyLinkedList[A])
@@ -196,9 +196,9 @@ def findTail[A](list: DoublyLinkedList[A]): DoublyLinkedList[A] = list match {
         .add(Stock("AMZN", 3400.0))
 
     // Create a list of options
-    val optionList: DoublyLinkedList[Option] = Empty
-        .add(Option("AAPL", 155.0, "2024-01-01"))
-        .add(Option("GOOGL", 2850.0, "2024-06-01"))
+    val optionList: DoublyLinkedList[StockOption] = Empty
+        .add(StockOption("AAPL", 155.0, "2024-01-01"))
+        .add(StockOption("GOOGL", 2850.0, "2024-06-01"))
 
     println(s"Option List: ${optionList.prettyPrint}")
     // Modify a stock

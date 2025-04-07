@@ -64,6 +64,71 @@ case class Grid(headers: Vector[String], rows: Vector[Vector[String]]) {
 
 import scala.collection.mutable
 
+
+def extractCDInfo(cdInfo: String): (Option[Double], Option[String]) = {
+    val rateRegex = """(\d+\.\d+)%""".r
+    val dateRegex = """DUE\s+(\d{2}/\d{2}/\d{2})""".r
+
+    val interestRate = rateRegex.findFirstMatchIn(cdInfo).map(_.group(1).toDouble)
+    val dueDate = dateRegex.findFirstMatchIn(cdInfo).map(_.group(1))
+
+    (interestRate, dueDate)
+}
+
+
+def calculateCDTotal(
+      rows: Seq[Seq[String]],
+      descriptionIndex: Int,
+      marketValueIndex: Int
+  ): Double = {
+    //println("descriptionIndex " + descriptionIndex)
+    //println("marketValueIndex " + marketValueIndex)
+    rows.foldLeft(0.0) { (total, row) =>
+      
+      if (descriptionIndex >= 0 && row.isDefinedAt(descriptionIndex) &&
+          row(descriptionIndex).toLowerCase.contains("cd fdic ins") &&
+          marketValueIndex >= 0 && row.isDefinedAt(marketValueIndex)) {
+        try {
+          
+          //println(s"calculateCDTotal row value ${ row(marketValueIndex).parseNumericValue} -> ${row(descriptionIndex)}")
+          //println(s"calculateCDTotal row $row")
+          total + row(marketValueIndex).parseNumericValue
+        } catch {
+          case e: Exception => {
+                    //NumberFormatException => total // Ignore rows with invalid market values
+                    println(s"An unexpected exception occurred: ${e.getMessage}") // Catch-all for other exceptions
+                    total
+          }
+    
+        }
+      } else {
+        total
+      }
+    }
+  }
+
+  implicit class StringParsing(val s: String) {
+    def parseNumericValue: Double = {
+      try {
+        s.replaceAll("[^\\d.]", "").toDouble
+      } catch {
+        case _: NumberFormatException => 0.0
+      }
+    }
+  }
+def printSummaryResults(accountTotals: mutable.Map[String, Double], accountCDTotals: mutable.Map[String, Double]): Unit = {
+    val cdAllAccountTotal = accountCDTotals.values.sum
+    val allAccountTotals = accountTotals.values.sum
+    accountTotals.foreach { case (accountName, total) =>
+        val cdTotal = accountCDTotals.getOrElse(accountName, 0.0)
+        val percentage = if (total > 0) (cdTotal / total) * 100 else 0.0
+        
+        println(s"Summary Account: $accountName, Total: %.2f, CD Total: %.2f, CD Percentage: %.2f".format(total, cdTotal, percentage))
+    
+
+    }
+    println(s"Summary Total: %.2f, CD Total: %.2f, CD Percentage: %.2f".format(allAccountTotals, cdAllAccountTotal, (cdAllAccountTotal /allAccountTotals) * 100))
+}
 // Define the AccountData and Grid classes as before
 //case class Grid(headers: Vector[String], rows: Vector[Vector[String]])
 //case class AccountData(accountName: String, grid: Grid)
@@ -78,24 +143,35 @@ def calculateMarketValuePercentage(accountData: Vector[AccountData]):  Vector[Ac
 
     // Map to hold account totals for easy lookup
     val accountTotals = mutable.Map[String, Double]()
+    val accountCDTotals = mutable.Map[String, Double]()
 
     // Iterate over each account and calculate percentages
     val updatedAccounts = accountData.zipWithIndex.map { case (account,index) =>
         val headers = account.grid.headers
         val rows = account.grid.rows
         val mktValIndex = headers.indexOf("Mkt Val (Market Value)")
+        val descrIndex = headers.indexOf("Description")
+        val accountCDTotal = calculateCDTotal(rows, descrIndex, mktValIndex)
+
+        //println(s"Account: ${account.accountName} CD Total: $$${accountCDTotal}")
 
         // Calculate account total market value
         val accountTotal = rows.map(row => row(mktValIndex).parseNumericValue).sum
         accountTotals(account.accountName) = accountTotal
-
-        println(s"${account.accountName} Total Market Value: $$${accountTotal}")
+        accountCDTotals(account.accountName) = accountCDTotal
+        println("\n-------------------------------------------------------------------------------------------------------------")
+        println(s"${account.accountName} Total Market Value: $$${accountTotal} CD Total: $$${accountCDTotal}")
 
         // Add new percentage columns
         val updatedHeaders = headers :+ "% of Account" :+ "% of Portfolio"
         val updatedRows = rows.map { row =>
             val mktVal = row(mktValIndex).parseNumericValue
-            println(s"${row.head} mktVal {$mktVal}")
+            print(s"\n${row.head} mktVal $mktVal ")
+            extractCDInfo(row(descrIndex)) match {
+                case (Some(rate), Some(dueDate)) => print(s" CD Rate: $rate, Due Date: $dueDate")
+                case _ => // do nothing
+            }
+            
             val percentageOfAccount = (mktVal / accountTotal) * 100
             val percentageOfPortfolio = (mktVal / portfolioTotal) * 100
             row :+ f"$percentageOfAccount%.2f" :+ f"$percentageOfPortfolio%.2f"
@@ -104,23 +180,24 @@ def calculateMarketValuePercentage(accountData: Vector[AccountData]):  Vector[Ac
         val accountTotalRow = Vector.fill(mktValIndex - 1)(" ") :+ "Total" :+ 
                       f"$$${accountTotal}%.2f" :++
                       Vector.fill(headers.size - mktValIndex + 1)(" ")
-        println(s"------------- accountTotalRow $accountTotalRow accountRowSize ${accountTotalRow.size} header size ${headers.size} mktValIndex $mktValIndex")
+        //println(s"------------- accountTotalRow $accountTotalRow accountRowSize ${accountTotalRow.size} header size ${headers.size} mktValIndex $mktValIndex")
 
         // Return updated account data
         
         
         if (index == accountData.size - 1) {
-            println("Last index about to add portfolio total")
+            //println("Last index about to add portfolio total")
             val portfolioTotalRow = Vector.fill(mktValIndex - 1)(" ") :+ "Portfolio Total" :+ 
                     f"$$${portfolioTotal}%.2f" :++
                     Vector.fill(headers.size - mktValIndex + 1)(" ")
-            println(s"------------- portfolioTotalRow $portfolioTotalRow portfolioTotalRow ${portfolioTotalRow.size} header size ${headers.size} mktValIndex $mktValIndex")
+            //println(s"------------- portfolioTotalRow $portfolioTotalRow portfolioTotalRow ${portfolioTotalRow.size} header size ${headers.size} mktValIndex $mktValIndex")
             AccountData(account.accountName, Grid(updatedHeaders, updatedRows :+ accountTotalRow :+ portfolioTotalRow))                    
             //AccountData(account.accountName, Grid(updatedHeaders, updatedRows :+ accountTotalRow))
         }
         else {
             AccountData(account.accountName, Grid(updatedHeaders, updatedRows :+ accountTotalRow))
         }
+        
         /*
         val rowsWithTotals = updatedRows :+ accountTotalRow
         rowsWithTotals.zipWithIndex.foreach { case (row, rowIndex) =>
@@ -135,8 +212,8 @@ def calculateMarketValuePercentage(accountData: Vector[AccountData]):  Vector[Ac
         //AccountData(account.accountName, Grid(updatedHeaders, updatedRows :+ accountTotalRow))   
     }
     
-    
-    //println(f"\nPortfolio Total Market Value: $$${portfolioTotal}%.2f")
+    printSummaryResults(accountTotals, accountCDTotals)
+    println("\n-------------------------------------------------------------------------------------------------------------")
     updatedAccounts
 }
 
