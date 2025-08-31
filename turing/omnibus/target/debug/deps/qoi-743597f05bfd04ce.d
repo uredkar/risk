@@ -1,0 +1,13 @@
+C:\sources\newrisk\risk\turing\omnibus\target\debug\deps\qoi-743597f05bfd04ce.d: C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\lib.rs C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\decode.rs C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\encode.rs C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\error.rs C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\header.rs C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\pixel.rs C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\types.rs C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\utils.rs C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\consts.rs
+
+C:\sources\newrisk\risk\turing\omnibus\target\debug\deps\libqoi-743597f05bfd04ce.rmeta: C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\lib.rs C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\decode.rs C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\encode.rs C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\error.rs C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\header.rs C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\pixel.rs C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\types.rs C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\utils.rs C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\consts.rs
+
+C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\lib.rs:
+C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\decode.rs:
+C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\encode.rs:
+C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\error.rs:
+C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\header.rs:
+C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\pixel.rs:
+C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\types.rs:
+C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\utils.rs:
+C:\Users\unmes\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\qoi-0.4.1\src\consts.rs:
